@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="3.0" xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence 
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+    <persistence-unit name="BEACON_NETWORK" transaction-type="RESOURCE_LOCAL">
+
+        <non-jta-data-source>java:jboss/datasources/BeaconNetwork</non-jta-data-source>
+        <class>es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity</class>
+        <properties>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.show_sql" value = "true" />
+
+        </properties>
+    </persistence-unit>
+</persistence>
