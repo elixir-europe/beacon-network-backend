@@ -1,0 +1,35 @@
+name: Maven Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        server-id: gitlab-bsc-maven # Value of the distributionManagement/repository/id field of the pom.xml
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        settings-path: ${{ github.workspace }} # location for the settings.xml file
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Deploy to BSC GitLab Maven Repository
+      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+      env:
+          MAVEN_USERNAME: gitlab-bsc-maven
+          MAVEN_PASSWORD: ${{ secrets.BSC_GITLAB_MAVEN_REPO }}
