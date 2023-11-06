@@ -166,7 +166,7 @@ public class BeaconMapsProducer {
             url = url.replaceAll("\\{", "%7B");
             url = url.replaceAll("\\}", "%7D");
             try {
-                final URI proxy_url = URI.create(URI.create(url).getPath());
+                final URI proxy_url = URI.create(URI.create(url).getRawPath());
                 final URI rel_url = proxy_base_uri.relativize(proxy_url);
                 return URLDecoder.decode(rel_url.toString(), StandardCharsets.UTF_8);
             } catch(IllegalArgumentException ex) {}
