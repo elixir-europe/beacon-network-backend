@@ -38,6 +38,7 @@ import jakarta.inject.Singleton;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,11 +97,10 @@ public class BeaconMapsProducer {
                 aggregated_endpoint = new Endpoint();
                 aggregated_endpoint.setEntryType(proxy_endpoint.getEntryType());
                 
-                final String root_url = resolve(
-                        relativize(proxy_base_uri, proxy_endpoint.getRootUrl()));
-
-                final String single_entry_url = resolve(
-                        relativize(proxy_base_uri, proxy_endpoint.getSingleEntryUrl()));
+                final String root_url = resolve(Paths.get(URI.create(
+                        proxy_endpoint.getRootUrl()).getPath()).getFileName().toString());
+                final String single_entry_url = resolve(relativize(
+                        proxy_base_uri, proxy_endpoint.getSingleEntryUrl()));
                 
                 aggregated_endpoint.setRootUrl(root_url);
                 aggregated_endpoint.setSingleEntryUrl(single_entry_url);
@@ -166,7 +166,7 @@ public class BeaconMapsProducer {
             url = url.replaceAll("\\{", "%7B");
             url = url.replaceAll("\\}", "%7D");
             try {
-                final URI proxy_url = URI.create(url);
+                final URI proxy_url = URI.create(URI.create(url).getPath());
                 final URI rel_url = proxy_base_uri.relativize(proxy_url);
                 return URLDecoder.decode(rel_url.toString(), StandardCharsets.UTF_8);
             } catch(IllegalArgumentException ex) {}
