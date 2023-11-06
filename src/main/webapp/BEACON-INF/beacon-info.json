@@ -3,6 +3,7 @@
     "meta": {
         "apiVersion": "v2.0.0",
         "beaconId": "es.elixir.bsc.beacon-network",
+        "isAggregated": true,
         "testMode": true,
         "returnedSchemas": [
             {
