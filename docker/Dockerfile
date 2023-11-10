@@ -1,0 +1,23 @@
+# Beacon Network 2.0 image
+FROM quay.io/wildfly/wildfly:30.0.0.Final-jdk17
+
+# patch WildFly with latest yasson library
+COPY ./docker/yasson $JBOSS_HOME/modules/system/layers/base/org/eclipse/yasson/
+
+# add PostgreSQL java driver and latest Yasson snapshot
+COPY ./docker/postgresql $JBOSS_HOME/modules/system/layers/base/org/postgresql/
+
+# configure Beacon Network datasource
+RUN /bin/sh -c 'echo -e "embed-server --std-out=echo\n \
+/subsystem=undertow/server=default-server/ajp-listener=ajp:add(socket-binding=ajp, scheme=https, redirect-socket=https, enabled=true)\n \
+/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)\n \
+/subsystem=datasources/data-source=BeaconNetwork:add(driver-name=postgresql,jndi-name=java:jboss/datasources/BeaconNetwork,connection-url=\${env.BEACON_NETWORK_DB_CONNECTION_URL},user-name=\${env.BEACON_NETWORK_DB_USERNAME},password=\${env.BEACON_NETWORK_DB_PASSWORD})\n \
+stop-embedded-server" > $JBOSS_HOME/bin/wildfly-config.cli'
+
+RUN $JBOSS_HOME/bin/jboss-cli.sh --file="$JBOSS_HOME/bin/wildfly-config.cli"
+RUN rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current/*
+
+ADD ./target/beacon-network-v2-*.war $JBOSS_HOME/standalone/deployments/beacon-network-v2.war
+
+# Expose AJP port
+EXPOSE 8009
