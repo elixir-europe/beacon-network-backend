@@ -1,0 +1,40 @@
+version: '3.9'
+
+networks:
+  beacon-network:
+
+x-environment: &postgres
+  - POSTGRES_USER=postgres
+  - POSTGRES_PASSWORD=postgres
+  - POSTGRES_BN_DATABASE=beacon-network
+  - BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
+  - BEACON_NETWORK_DB_CONNECTION_URL=jdbc:postgresql://postgres:5432/beacon-network
+  - BEACON_NETWORK_DB_USERNAME=beacon
+  - BEACON_NETWORK_DB_PASSWORD=beacon
+
+services:
+  postgres:
+    image: postgres:16.0-alpine
+    restart: always
+    environment: *postgres
+    volumes: 
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    networks:
+      - beacon-network
+  wildfly:
+    image: ghcr.io/elixir-europe/beacon-network-backend:latest
+    container_name: "wildfly-beacon-network"
+    depends_on:
+      - postgres
+    restart: always
+    volumes:
+      - ./wildfly/BEACON-INF:/wildfly/BEACON-INF
+    hostname: wildfly
+    networks:
+      - beacon-network
+    ports:
+      - '9080:8080'
+      - '9009:8009'
+      - '9443:8443'
+    environment: *postgres

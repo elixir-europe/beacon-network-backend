@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -41,7 +41,7 @@ jobs:
       env:
           MAVEN_USERNAME: gitlab-bsc-maven
           MAVEN_PASSWORD: ${{ secrets.BSC_GITLAB_MAVEN_REPO }}
-          
+
     - name: Log into the Container registry
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
       if: github.ref_type == 'tag'
