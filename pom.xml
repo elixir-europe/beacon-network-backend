@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright (C) 2023 Spanish National Bioinformatics Institute (INB) and
-  Barcelona Supercomputing Center
+  Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+  and Barcelona Supercomputing Center
 
   Modifications to the initial code base are copyright of their respective
   authors, or their employers as appropriate.
@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>es.bsc.inb.ga4gh</groupId>
     <artifactId>beacon-network-v2</artifactId>
-    <version>0.0.9-SNAPSHOT</version>
+    <version>0.0.9</version>
     <packaging>war</packaging>
 
     <description>
