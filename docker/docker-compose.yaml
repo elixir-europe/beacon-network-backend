@@ -34,7 +34,7 @@ services:
     networks:
       - beacon-network
     ports:
-      - '9080:8080'
-      - '9009:8009'
-      - '9443:8443'
+      - '8080:8080'
+      - '8009:8009'
+      - '8443:8443'
     environment: *postgres
