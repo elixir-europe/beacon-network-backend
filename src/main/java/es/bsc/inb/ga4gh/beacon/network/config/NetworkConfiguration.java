@@ -116,6 +116,7 @@ public class NetworkConfiguration {
      */
     public void updateBeacons() {
         hashes.clear();
+        errors.clear();
         endpoints.values().forEach(e -> updateBeacon(e));
     }
     
