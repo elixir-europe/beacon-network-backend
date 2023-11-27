@@ -1,3 +1,13 @@
+FROM maven:3.9.5-eclipse-temurin-17-alpine as builder
+
+COPY pom.xml .
+
+RUN mvn dependency:go-offline --no-transfer-progress
+
+COPY src/ /src/
+
+RUN mvn clean install -DskipTests --no-transfer-progress
+
 # Beacon Network 2.0 image
 FROM quay.io/wildfly/wildfly:30.0.0.Final-jdk17
 
@@ -14,7 +24,7 @@ stop-embedded-server" > $JBOSS_HOME/bin/wildfly-config.cli'
 RUN $JBOSS_HOME/bin/jboss-cli.sh --file="$JBOSS_HOME/bin/wildfly-config.cli"
 RUN rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current/*
 
-ADD ./target/beacon-network-v2-*.war $JBOSS_HOME/standalone/deployments/beacon-network-v2.war
+COPY --from=builder /target/beacon-network-v2-*.war $JBOSS_HOME/standalone/deployments/beacon-network-v2.war
 
 # Expose AJP port
 EXPOSE 8009
