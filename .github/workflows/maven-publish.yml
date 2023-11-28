@@ -1,4 +1,4 @@
-name: Beacon Network Deploy
+name: Beacon Network Maven Build
 
 on:
   push:
