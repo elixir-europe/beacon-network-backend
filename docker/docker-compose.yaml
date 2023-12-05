@@ -1,9 +1,9 @@
-version: '3.9'
+version: '3'
 
 networks:
   beacon-network:
 
-x-environment: &postgres
+x-environment: &env
   - POSTGRES_USER=postgres
   - POSTGRES_PASSWORD=postgres
   - POSTGRES_BN_DATABASE=beacon-network
@@ -11,13 +11,13 @@ x-environment: &postgres
   - BEACON_NETWORK_DB_CONNECTION_URL=jdbc:postgresql://postgres:5432/beacon-network
   - BEACON_NETWORK_DB_USERNAME=beacon
   - BEACON_NETWORK_DB_PASSWORD=beacon
-
+  - JBOSS_JAVA_SIZING=-XX:+UseContainerSupport -XX:MaxRAMPercentage=70.0 -Xms128m
 services:
   postgres:
     image: postgres:16.0-alpine
     restart: always
-    environment: *postgres
-    volumes: 
+    environment: *env
+    volumes:
       - ./postgresql/data:/var/lib/postgresql/data
       - ./postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     networks:
@@ -37,4 +37,4 @@ services:
       - '8080:8080'
       - '8009:8009'
       - '8443:8443'
-    environment: *postgres
+    environment: *env

@@ -1,15 +1,9 @@
-name: Beacon Network Deploy
+name: Beacon Network Maven Build
 
 on:
   push:
     branches:
       - master
-    tags:
-    - 'v*.*.*'
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -41,28 +35,3 @@ jobs:
       env:
           MAVEN_USERNAME: gitlab-bsc-maven
           MAVEN_PASSWORD: ${{ secrets.BSC_GITLAB_MAVEN_REPO }}
-
-    - name: Log into the Container registry
-      uses: docker/login-action@v3
-      if: github.ref_type == 'tag'
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata for the Docker image
-      id: meta
-      uses: docker/metadata-action@v3
-      if: github.ref_type == 'tag'
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-    - name: Build and push the Docker image
-      uses: docker/build-push-action@v3
-      if: github.ref_type == 'tag'
-      with:
-        context: .
-        file: ./docker/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}

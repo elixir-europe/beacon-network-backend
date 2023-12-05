@@ -4,12 +4,12 @@
 The implementation is developed and deployed on the [WildFly 30.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
 
 ###### Beacon v2 Java implementation
-The implementation uses [Beacon v2 Java beacon-frameworky](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
+The implementation uses [Beacon v2 Java beacon-framework](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
 
 ###### SQL Database
 The Beacon Network Aggregator uses [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) for logging.
 The connection is defined in [persistence.xml](https://github.com/elixir-europe/beacon-network-backend/blob/master/src/main/resources/META-INF/persistence.xml).
-Although the Aggregator may be used with any SQL database, it is configured to be used with [PostgreSQL](https://www.postgresql.org/) database
+Although the Aggregator may be used with any SQL database, it is configured to be used with [PostgreSQL](https://www.postgresql.org/) database.
 
 ###### Docker Image
 This repository is configured to automatically generate docker images on release tags ('vX.Y.Z').  
