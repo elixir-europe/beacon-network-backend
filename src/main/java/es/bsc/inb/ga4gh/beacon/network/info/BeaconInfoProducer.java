@@ -29,6 +29,8 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResponse
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResults;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfigUpdatedEvent;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
+import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
+import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME;
 import es.bsc.inb.ga4gh.beacon.network.model.BeaconNetworkInfoResponse;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconValidationMessage;
 import jakarta.annotation.PostConstruct;
@@ -44,6 +46,10 @@ import jakarta.servlet.ServletContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +63,7 @@ import java.util.logging.Logger;
 @Singleton
 public class BeaconInfoProducer implements Serializable {
 
-    private final static String BEACON_INFO_FILE = "BEACON-INF/beacon-info.json";
+    private final static String BEACON_INFO_FILE = "beacon-info.json";
     
     @Inject 
     private ServletContext ctx;
@@ -69,14 +75,25 @@ public class BeaconInfoProducer implements Serializable {
     
     @PostConstruct
     public void init() {
-        try (InputStream in = ctx.getResourceAsStream(BEACON_INFO_FILE)) {
+        String config_dir = System.getenv(BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME);
+        if (config_dir != null) {
+            try(InputStream in = Files.newInputStream(Paths.get(config_dir, BEACON_INFO_FILE), StandardOpenOption.READ)) {
+                beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
+                return;
+            } catch (NoSuchFileException ex) {
+            } catch (Exception ex) {
+                Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+
+        try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE)) {
             if (in == null) {
                 Logger.getLogger(BeaconInfoProducer.class.getName()).log(
-                        Level.SEVERE, "no service info file found: " + BEACON_INFO_FILE);
+                        Level.SEVERE, "no service info file found: %s", BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE);
             } else {
                 beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

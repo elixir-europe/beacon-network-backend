@@ -70,6 +70,11 @@ import java.util.logging.Logger;
 @Singleton
 public class NetworkConfiguration {
 
+    public final static String BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME = "BEACON_NETWORK_CONFIG_DIR";
+    
+    public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
+    public final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
+
     @Inject
     private Event<NetworkConfigUpdatedEvent> config_updated_event;
 

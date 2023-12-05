@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -25,6 +25,9 @@
 
 package es.bsc.inb.ga4gh.beacon.network.config;
 
+import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
+import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME;
+import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_FILE;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
@@ -56,15 +59,8 @@ import java.util.logging.Logger;
  * @author Dmitry Repchevsky
  */
 
-
-
 @WebListener
 public class NetworkConfigurationListener implements ServletContextListener {
-
-    public final static String BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME = "BEACON_NETWORK_CONFIG_DIR";
-    
-    private final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
-    private final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
 
     private String[] beacon_network_urls;
     
