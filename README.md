@@ -33,7 +33,7 @@ In addition to the provided docker images, artifacts are stored on the Barcelona
 https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.9/beacon-network-v2-0.0.9.war
 
 ###### Configuration
-There are three configuration files in the `/BEACON-INF` directory:
+There are three default configuration files in the `/BEACON-INF` directory:
 * `configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
 * `beacon-info.json` - standard beacon information file: [beaconInfoResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconInfoResponse.json)
 * `beacon-network.json` - Json Array of backed Beacons' endpoints  
@@ -47,9 +47,18 @@ The example of the `beacon-network.json`:
 ```
 Note that the **W**eb application **AR**chive (WAR) is just a usual ZIP file so one can edit these configurations manually without the need to rebuild the application.
 
-It is also possible to define external directory for the `beacon-network.json` configuration.
+It is also possible to define external directory for the configuration.
 ```bash
 export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 ```
-When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.
+When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
+It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-info.json` so deployers may change the beacon identifier and other metatada.
+
+The application provides simple SQL logging which level may be confirured via `BEACON_NETWORK_LOG_LEVEL` environment variable.  
+The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES**", "**ALL**"
+- "**NONE**" : No logging at all.
+- "**METADATA**" : Only backed beacons' metadata is logged (good for debugging).
+- "**REQUESTS**" : Beacon Network Request quieries are logged. It also logs response codes (but not the data).
+- "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
+- "**ALL**" : Maximum logging level. Currently same as "**RESPONSES**"
 
