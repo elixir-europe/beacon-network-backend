@@ -8,11 +8,10 @@
         <non-jta-data-source>java:jboss/datasources/BeaconNetwork</non-jta-data-source>
         <class>es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity</class>
         <properties>
+<!--
             <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
-
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.show_sql" value = "true" />
-
+-->
+            <property name="hibernate.hbm2ddl.auto" value="update" />
         </properties>
     </persistence-unit>
 </persistence>
