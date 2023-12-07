@@ -43,7 +43,6 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.servlet.ServletContext;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;

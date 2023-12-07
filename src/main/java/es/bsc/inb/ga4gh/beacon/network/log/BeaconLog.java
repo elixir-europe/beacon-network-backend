@@ -25,6 +25,7 @@
 
 package es.bsc.inb.ga4gh.beacon.network.log;
 
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.REQUEST_TYPE;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.persistence.EntityManager;
@@ -41,6 +42,19 @@ public class BeaconLog {
     private EntityManager em;
     
     public void log(BeaconLogEntity record) {
+
+        if (BeaconLogLevel.LEVEL == BeaconLogLevel.NONE ||
+            (BeaconLogLevel.LEVEL == BeaconLogLevel.METADATA && 
+             record.getType() != REQUEST_TYPE.METADATA)) {
+            return;
+        }
+
+        if (BeaconLogLevel.LEVEL.compareTo(BeaconLogLevel.RESPONSES) < 0 &&
+            record.getType() == REQUEST_TYPE.QUERY) {
+            record.setMessage(null);
+            record.setResponse(null);
+        }
+        
         final EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
