@@ -1,4 +1,4 @@
-l# beacon-network-backend
+# beacon-network-backend
 
 ###### Jakarta EE Platform 10
 The implementation is developed and deployed on the [WildFly 30.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
@@ -41,7 +41,7 @@ cp target/beacon-network-v2-x.x.x.war $WILDFLY_HOME/standalone/deployments/
 ./$WILDFLY_HOME/bin/standalone.sh
 ```
 
-### Configuration
+## Configuration
 
 There are three default configuration files in the `/BEACON-INF` directory:
 * `configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
