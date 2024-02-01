@@ -82,7 +82,7 @@ public class BeaconNetworkResponseBuilder {
             BeaconRequestQuery query, 
             List<CompletableFuture<HttpResponse<AbstractBeaconResponse>>> invocations) {
 
-        AbstractBeaconResponse aggregated = null;
+        AbstractBeaconResponse aggregated;
 
         final List<AbstractBeaconResponse> beacons_responses = getResultsets(invocations);
         
@@ -101,25 +101,19 @@ public class BeaconNetworkResponseBuilder {
             aggregated = response;
         } else {
             final BeaconResultsetsResponse response = new BeaconResultsetsResponse();
+            final BeaconResultsets resultsets = new BeaconResultsets();
+            
+            response.setResponse(resultsets);
             response.setMeta(new BeaconResponseMeta());
             response.setResponseSummary(new BeaconResponseSummary(false));
-            
+          
             for (AbstractBeaconResponse beacon_response : beacons_responses) {
                 if (beacon_response instanceof BeaconResultsetsResponse res) {
                     mergeMeta(response, res);
                     mergeResultsets(response, res);
                     mergeSummary(response, res);
-                }
-            }
-            aggregated = response;
-        }
-
-        if (aggregated instanceof BeaconResultsetsResponse resultsets) {
-            BeaconResultsets results = resultsets.getResponse();
-
-            for (AbstractBeaconResponse beacon_response : beacons_responses) {
-                if (beacon_response instanceof BeaconErrorResponse err) {
-                    BeaconResultset empty = new BeaconResultset();
+                } else if (beacon_response instanceof BeaconErrorResponse err) {
+                    final BeaconResultset empty = new BeaconResultset();
                     empty.setExists(false);
                     BeaconError error = err.getBeaconError();
                     if (error != null) {
@@ -133,16 +127,20 @@ public class BeaconNetworkResponseBuilder {
                         empty.setInfo(Json.createObjectBuilder().add("error", b).build());
                     }
 
-                    BeaconResponseMeta err_meta = err.getMeta();
+                    final BeaconResponseMeta err_meta = err.getMeta();
                     if (err_meta != null) {
                         empty.setBeaconId(err_meta.getBeaconId());
                     }
+                    
+                    List<BeaconResultset> list = resultsets.getResultSets();
+                    if (list == null) {
+                        resultsets.setResultSets(list = new ArrayList());
+                    }
 
-                    results.getResultSets().add(empty);
+                    list.add(empty);
                 }
             }
-        } else {
-            aggregated = new BeaconErrorResponse(); // todo
+            aggregated = response;
         }
 
         final BeaconResponseMeta beacon_network_response_meta = this.getMeta(meta, query);
@@ -184,9 +182,6 @@ public class BeaconNetworkResponseBuilder {
                 : source.getMeta().getBeaconId();
         
         BeaconResultsets target_response = target.getResponse();
-        if (target_response == null) {
-            target.setResponse(target_response = new BeaconResultsets());
-        }
 
         List<BeaconResultset> target_resultsets = target_response.getResultSets();
         if (target_resultsets == null) {
@@ -208,7 +203,7 @@ public class BeaconNetworkResponseBuilder {
 
         // emulate a resultset for boolean or count responses
         BeaconResultset result_set = new BeaconResultset();
-        result_set.setId(beacon_id);
+        result_set.setBeaconId(beacon_id);
         result_set.setInfo(source.getInfo());
         result_set.setResultsHandovers(source.getBeaconHandovers());
         BeaconResponseSummary summary = source.getResponseSummary();
