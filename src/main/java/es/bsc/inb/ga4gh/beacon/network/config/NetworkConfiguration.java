@@ -193,7 +193,7 @@ public class NetworkConfiguration {
     }
 
     /**
-     * Updats Beacon's metadata.
+     * Update Beacon's metadata.
      * 
      * @param endpoint Beacon's API endpoint
      * @param schema Beacon's metadata type (INFO, MAP, ENTRY_TYPES, etc.)

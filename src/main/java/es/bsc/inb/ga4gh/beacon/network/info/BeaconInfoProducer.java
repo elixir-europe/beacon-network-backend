@@ -43,12 +43,16 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.servlet.ServletContext;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,31 +74,62 @@ public class BeaconInfoProducer implements Serializable {
     @Inject
     private NetworkConfiguration config;
 
-    private BeaconNetworkInfoResponse beacon_info;
+    private FileTime last_modified_time;
+    private volatile BeaconNetworkInfoResponse beacon_info;
     
     @PostConstruct
     public void init() {
-        String config_dir = System.getenv(BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME);
+        beacon_info = readBeaconInfo();
+    }
+
+    private BeaconNetworkInfoResponse readBeaconInfo() {
+        final String config_dir = System.getenv(BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME);
         if (config_dir != null) {
-            try(InputStream in = Files.newInputStream(Paths.get(config_dir, BEACON_INFO_FILE), StandardOpenOption.READ)) {
-                beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
-                return;
-            } catch (NoSuchFileException ex) {
-            } catch (Exception ex) {
-                Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
+            final Path path = Paths.get(config_dir, BEACON_INFO_FILE);
+            if (Files.exists(path)) {
+                try {
+                    final BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+                    synchronized(BeaconNetworkInfoResponse.class) {
+                        if (last_modified_time == null || last_modified_time.compareTo(attr.lastModifiedTime()) != 0) {
+                            try(InputStream in = Files.newInputStream(path, StandardOpenOption.READ)) {
+                                beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
+                                injectResponses();
+                                last_modified_time = attr.lastModifiedTime();
+                            } catch (NoSuchFileException ex) {
+                            } catch (Exception ex) {
+                                Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
+                            }
+                        }
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
+                }
+            } else if (last_modified_time != null) {
+                // switch to embedded 'beacon-info.json' if custom one has been removed
+                beacon_info = null;
+                last_modified_time = null;
             }
         }
 
-        try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE)) {
-            if (in == null) {
-                Logger.getLogger(BeaconInfoProducer.class.getName()).log(
-                        Level.SEVERE, "no service info file found: %s", BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE);
-            } else {
-                beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
+        if (beacon_info == null) {
+            synchronized(BeaconNetworkInfoResponse.class) {
+                if (beacon_info == null) {
+                    try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE)) {
+                        if (in == null) {
+                            Logger.getLogger(BeaconInfoProducer.class.getName()).log(
+                                    Level.SEVERE, "no service info file found: %s", BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE);
+                        } else {
+                            beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
+                            injectResponses();
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
-        } catch (Exception ex) {
-            Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        return beacon_info;
     }
 
     /**
@@ -103,19 +138,27 @@ public class BeaconInfoProducer implements Serializable {
      * @param event update event
      */
     public void onEvent(@ObservesAsync NetworkConfigUpdatedEvent event) {
-        if (beacon_info != null) {
-            final List<BeaconInfoResponse> responses = new ArrayList();
-
-            for (BeaconNetworkInfoResponse response : config.getInfos().values()) {
-                responses.add(response);
-            }
-            
-            beacon_info.setResponses(responses.isEmpty() ? null : responses);
-            
-            setMetadataParsingErrors();
-        }
+        injectResponses();
     }
     
+    /**
+     * Inject Beacons` '/info' responses into the BN '/info'
+     */
+    private void injectResponses() {
+        if (beacon_info != null) {
+            synchronized(BeaconNetworkInfoResponse.class) {
+                if (beacon_info != null) {
+                    final List<BeaconInfoResponse> responses = new ArrayList();
+                    for (BeaconNetworkInfoResponse response : config.getInfos().values()) {
+                        responses.add(response);
+                    }
+                    beacon_info.setResponses(responses.isEmpty() ? null : responses);
+                    setMetadataParsingErrors();
+                }
+            }
+        }
+    }
+
     private void setMetadataParsingErrors() {
         final Map<String, List<BeaconValidationMessage>> errors = config.getErrors();
         if (!errors.isEmpty()) {
@@ -153,7 +196,7 @@ public class BeaconInfoProducer implements Serializable {
 
     @Produces
     public BeaconNetworkInfoResponse beaconInfo() {        
-        return beacon_info;
+        return readBeaconInfo();
     }
 
 }
