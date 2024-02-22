@@ -30,8 +30,10 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.Endpoint;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.RelatedEndpoint;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.ServiceConfiguration;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconMapResponse;
+import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfigUpdatedEvent;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
 import es.bsc.inb.ga4gh.beacon.network.config.URIInfoProducer;
+import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -60,6 +62,11 @@ public class BeaconMapsProducer {
     
     private BeaconMapResponse map_response;
     
+    public void onEvent(@ObservesAsync NetworkConfigUpdatedEvent event) {
+        // regenerate /map when metadata was done / updated
+        map_response = null;
+    }
+
     private BeaconMap generate() {
         final BeaconMap aggregated_map = new BeaconMap();
         final Map<String, Endpoint> aggregated_endpoints = new HashMap();
