@@ -173,7 +173,9 @@ public class BeaconInfoProducer implements Serializable {
 //                        final String schema = err.id.getPath();
 //                        obj.add("schema", schema + "#" + err.pointer);
 //                    }
-                    
+                    if (err.code != null) {
+                        obj.add("code", err.code);
+                    }
                     if (err.location != null) {
                         obj.add("location", err.location);
                     }
