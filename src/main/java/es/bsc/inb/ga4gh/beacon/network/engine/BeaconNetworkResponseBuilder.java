@@ -310,7 +310,7 @@ public class BeaconNetworkResponseBuilder {
                         .collect(Collectors.toList()));
             }
 
-            request_summary.setRequestedGranularity(request_query.getGranularity());
+            request_summary.setRequestedGranularity(request_query.getRequestedGranularity());
             request_summary.setTestMode(request_query.getTestMode());
         }
         

@@ -186,7 +186,7 @@ public class BeaconFilteringTermsProducer {
                                 if (scopes == null) {
                                     filtering_term.setScopes(scopes = new ArrayList());
                                 }
-                                if (!scopes.contains(scope)) {
+                                if (scope != null && !scopes.contains(scope)) {
                                     scopes.add(scope);
                                 }
                                 terms.put(id, filtering_term);
