@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -30,6 +30,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import java.net.URI;
 
 /**
  * @author Dmitry Repchevsky
@@ -41,15 +44,37 @@ public class BeaconLog {
     @Inject
     private EntityManager em;
     
+    public BeaconLogEntity getLastResponse(String url) {
+        final EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            final TypedQuery<BeaconLogEntity> query = 
+                    em.createQuery("SELECT l FROM log l WHERE code < 300 AND url = :url ORDER BY l.id DESC", 
+                            BeaconLogEntity.class);
+            query.setParameter("url", url);
+            query.setMaxResults(1);
+            final BeaconLogEntity entry = query.getSingleResult();
+            tx.commit();
+            return entry;
+        } catch (Exception ex) {
+            tx.rollback();
+        }
+        return null;
+    }
+    
     public void log(BeaconLogEntity record) {
+        log(record, BeaconLogLevel.LEVEL);
+    }
+    
+    public void log(BeaconLogEntity record, BeaconLogLevel level) {
 
-        if (BeaconLogLevel.LEVEL == BeaconLogLevel.NONE ||
-            (BeaconLogLevel.LEVEL == BeaconLogLevel.METADATA && 
+        if (level == BeaconLogLevel.NONE ||
+            (level == BeaconLogLevel.METADATA && 
              record.getType() != REQUEST_TYPE.METADATA)) {
             return;
         }
 
-        if (BeaconLogLevel.LEVEL.compareTo(BeaconLogLevel.RESPONSES) < 0 &&
+        if (level.compareTo(BeaconLogLevel.RESPONSES) < 0 &&
             record.getType() == REQUEST_TYPE.QUERY) {
             record.setMessage(null);
             record.setResponse(null);

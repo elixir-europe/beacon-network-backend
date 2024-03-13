@@ -35,6 +35,7 @@ import es.bsc.inb.ga4gh.beacon.network.log.BeaconLog;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.METHOD;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.REQUEST_TYPE;
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogLevel;
 import es.bsc.inb.ga4gh.beacon.network.model.BeaconNetworkInfoResponse;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconMetadataSchema;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconMetadataValidator;
@@ -175,20 +176,40 @@ public class NetworkConfiguration {
      */
     private void updateBeacon(String endpoint) {
         final List<BeaconValidationMessage> err = new ArrayList();
-        if (updateMetadata(endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, err)) {
-            final String beaconId = getBeaconId(endpoint); // beaconId can't be null 
-            for (BeaconMetadataSchema schema : BeaconMetadataSchema.values()) {
-                if (BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA != schema) {
-                    final int nerrors = err.size();
-                    updateMetadata(endpoint, schema, err);
-                    if (beaconId != null && nerrors != err.size()) {
-                        metadata.get(schema).remove(beaconId);
+        if (updateMetadata(endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, 
+                BeaconLogLevel.METADATA, err)) { // always write "/info" metadata
+            String beacon_id = getBeaconId(endpoint);
+            if (err.isEmpty()) {
+                // beaconId can't be null if no errors in metadata!
+                for (BeaconMetadataSchema schema : BeaconMetadataSchema.values()) {
+                    if (BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA != schema) {
+                        final int nerrors = err.size();
+                        updateMetadata(endpoint, schema, BeaconLogLevel.LEVEL, err);
+                        if (beacon_id != null && nerrors != err.size()) {
+                            metadata.get(schema).remove(beacon_id);
+                        }
                     }
                 }
-            }
-            if (err.isEmpty()) {
-                errors.remove(endpoint);
-            } else {
+                if (err.isEmpty()) {
+                    errors.remove(endpoint);
+                } else {
+                    errors.put(endpoint, err);
+                }
+            } else if (beacon_id == null) {
+                // the beacon is not accessible and never was loaded (beacon_id == null)
+                final BeaconLogEntity log_entity = log.getLastResponse(endpoint 
+                        + validator.ENDPOINTS.get(BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA));
+                if (log_entity != null) {
+                    final BeaconInformationalResponse response = validator.parseMetadata(log_entity.getResponse(),
+                            BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA);
+                    beacon_id = getBeaconId(response);
+                    if (beacon_id != null) {
+                        final Map<String, BeaconInformationalResponse> map = (Map<String, 
+                                BeaconInformationalResponse>)metadata.get(BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA);
+                        map.put(beacon_id, response);
+                        endpoints.put(beacon_id, endpoint);
+                    }                    
+                }
                 errors.put(endpoint, err);
             }
         }
@@ -204,6 +225,7 @@ public class NetworkConfiguration {
      * @return false if no changes in metadata happened, true otherwise
      */
     private boolean updateMetadata(String endpoint, BeaconMetadataSchema schema,
+            BeaconLogLevel level,
             List<BeaconValidationMessage> errors) {
         
         boolean changed = true;
@@ -231,24 +253,18 @@ public class NetworkConfiguration {
                     err = validator.validate(schema, value);
                     if (err.isEmpty()) {
                         final BeaconInformationalResponse response = validator.parseMetadata(json, schema);
-                        if (response != null) {
+                        final String beacon_id = getBeaconId(response);
+                        if (beacon_id != null) {
                             hashes.put(metadata_endpoint, json.hashCode());
-                            final BeaconInformationalResponseMeta rmeta = response.getMeta();
-                            if (rmeta != null) {
-                                final String beacon_id = rmeta.getBeaconId();
-                                if (beacon_id != null) {
-                                    endpoints.put(beacon_id, endpoint);
-                                    final Map<String, BeaconInformationalResponse> map = (Map<String, BeaconInformationalResponse>)metadata.get(schema);
-                                    map.put(beacon_id, response);
-                                }
-                            } else { // should never happen if json schema is correct!
-                                log_entry.setMessage("missed BeaconInformationalResponseMeta in response");
-                                err.add(new BeaconValidationMessage(
-                                        BeaconValidationErrorType.CONTENT_ERROR,
-                                        null, metadata_endpoint, null,
-                                        log_entry.getMessage()));
-                                
-                            }
+                            endpoints.put(beacon_id, endpoint);
+                            final Map<String, BeaconInformationalResponse> map = (Map<String, BeaconInformationalResponse>)metadata.get(schema);
+                            map.put(beacon_id, response);
+                        } else { // should never happen if json schema is correct!
+                            log_entry.setMessage("missed beaconId in response");
+                            err.add(new BeaconValidationMessage(
+                                    BeaconValidationErrorType.CONTENT_ERROR,
+                                    null, metadata_endpoint, null,
+                                    log_entry.getMessage()));
                         }
                     } else {
                         log_entry.setMessage(err.get(err.size() - 1).message);
@@ -263,7 +279,7 @@ public class NetworkConfiguration {
             }
         }
         
-        log.log(log_entry);
+        log.log(log_entry, level);
         
         return changed;
     }
@@ -301,6 +317,16 @@ public class NetworkConfiguration {
         return errors;
     }
 
+    private String getBeaconId(BeaconInformationalResponse response) {
+        if (response != null) {
+            final BeaconInformationalResponseMeta rmeta = response.getMeta();
+            if (rmeta != null) {
+                return  rmeta.getBeaconId();
+            }
+        }
+        return null;
+    }
+    
     private String getBeaconId(String endpoint) {
         for (Map.Entry<String, String> entry : endpoints.entrySet()) {
             if (endpoint.equals(entry.getValue())) {
