@@ -123,6 +123,8 @@ public class NetworkConfiguration {
         hashes.clear();
         errors.clear();
         endpoints.values().forEach(e -> updateBeacon(e));
+        
+        config_updated_event.fireAsync(new NetworkConfigUpdatedEvent());
     }
     
     /**
