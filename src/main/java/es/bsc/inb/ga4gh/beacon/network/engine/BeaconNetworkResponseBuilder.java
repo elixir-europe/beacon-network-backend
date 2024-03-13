@@ -205,6 +205,7 @@ public class BeaconNetworkResponseBuilder {
         BeaconResultset result_set = new BeaconResultset();
         result_set.setBeaconId(beacon_id);
         result_set.setInfo(source.getInfo());
+        result_set.setResults(new ArrayList());
         result_set.setResultsHandovers(source.getBeaconHandovers());
         BeaconResponseSummary summary = source.getResponseSummary();
         if (summary != null) {
