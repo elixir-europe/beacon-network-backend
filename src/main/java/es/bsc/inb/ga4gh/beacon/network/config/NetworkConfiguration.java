@@ -176,15 +176,15 @@ public class NetworkConfiguration {
      */
     private void updateBeacon(String endpoint) {
         final List<BeaconValidationMessage> err = new ArrayList();
-        if (updateMetadata(endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, 
+        String beacon_id = getBeaconId(endpoint);
+        if (updateMetadata(beacon_id, endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, 
                 BeaconLogLevel.METADATA, err)) { // always write "/info" metadata
-            String beacon_id = getBeaconId(endpoint);
             if (err.isEmpty()) {
                 // beaconId can't be null if no errors in metadata!
                 for (BeaconMetadataSchema schema : BeaconMetadataSchema.values()) {
                     if (BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA != schema) {
                         final int nerrors = err.size();
-                        updateMetadata(endpoint, schema, BeaconLogLevel.LEVEL, err);
+                        updateMetadata(beacon_id, endpoint, schema, BeaconLogLevel.LEVEL, err);
                         if (beacon_id != null && nerrors != err.size()) {
                             metadata.get(schema).remove(beacon_id);
                         }
@@ -224,8 +224,8 @@ public class NetworkConfiguration {
      * 
      * @return false if no changes in metadata happened, true otherwise
      */
-    private boolean updateMetadata(String endpoint, BeaconMetadataSchema schema,
-            BeaconLogLevel level,
+    private boolean updateMetadata(String beacon_id, String endpoint, 
+            BeaconMetadataSchema schema, BeaconLogLevel level,
             List<BeaconValidationMessage> errors) {
         
         boolean changed = true;
@@ -253,12 +253,18 @@ public class NetworkConfiguration {
                     err = validator.validate(schema, value);
                     if (err.isEmpty()) {
                         final BeaconInformationalResponse response = validator.parseMetadata(json, schema);
-                        final String beacon_id = getBeaconId(response);
-                        if (beacon_id != null) {
+                        final String new_beacon_id = getBeaconId(response);
+                        if (new_beacon_id != null) {
                             hashes.put(metadata_endpoint, json.hashCode());
-                            endpoints.put(beacon_id, endpoint);
                             final Map<String, BeaconInformationalResponse> map = (Map<String, BeaconInformationalResponse>)metadata.get(schema);
-                            map.put(beacon_id, response);
+                            
+                            if (beacon_id != null && !beacon_id.equals(new_beacon_id)) {
+                                // beacon provider has changed the beacon id!
+                                endpoints.remove(beacon_id);
+                                map.remove(beacon_id);
+                            }
+                            endpoints.put(new_beacon_id, endpoint);
+                            map.put(new_beacon_id, response);
                         } else { // should never happen if json schema is correct!
                             log_entry.setMessage("missed beaconId in response");
                             err.add(new BeaconValidationMessage(
