@@ -355,7 +355,7 @@ public class NetworkConfiguration {
     public BeaconFilteringTermsResponse loadFilteringTerms(String endpoint) {
         try {
             final List<BeaconValidationMessage> err = new ArrayList();
-            final String json = validator.loadMetadata(endpoint, new ValidationErrorsCollector(err));
+            final String json = validator.loadMetadata(endpoint + "?limit=0", new ValidationErrorsCollector(err));
             if (err.isEmpty()) {
                 return (BeaconFilteringTermsResponse)validator.parseMetadata(json, BeaconMetadataSchema.BEACON_FILTERING_TERMS_SCHEMA);
             }
