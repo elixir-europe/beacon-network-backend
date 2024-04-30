@@ -218,8 +218,10 @@ public class NetworkConfiguration {
     /**
      * Update Beacon's metadata.
      * 
+     * @param beacon_id known Beacon's identifier (may be null) 
      * @param endpoint Beacon's API endpoint
      * @param schema Beacon's metadata type (INFO, MAP, ENTRY_TYPES, etc.)
+     * @param leven logging level
      * @param errors Loading, Json Schema validation or parsing errors
      * 
      * @return false if no changes in metadata happened, true otherwise
