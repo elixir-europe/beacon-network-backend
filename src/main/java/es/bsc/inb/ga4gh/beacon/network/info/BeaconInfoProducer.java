@@ -176,6 +176,9 @@ public class BeaconInfoProducer implements Serializable {
                     if (err.code != null) {
                         obj.add("code", err.code);
                     }
+                    if (err.path != null) {
+                        obj.add("path", err.path);
+                    }
                     if (err.location != null) {
                         obj.add("location", err.location);
                     }
