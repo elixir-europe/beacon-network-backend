@@ -9,7 +9,9 @@ import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Dmitry Repchevsky
@@ -28,8 +30,8 @@ public class BeaconEndpointsMatcher {
 
         final StringBuffer url = request.getRequestURL();
 
-        final String endpointType = getEndpointType(url.toString());
-        if (endpointType == null) {
+        final Set<String> endpointTypes = getEndpointTypes(url.toString());
+        if (endpointTypes.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
 
@@ -41,7 +43,7 @@ public class BeaconEndpointsMatcher {
         for (Map.Entry<String, Map<String, String>> entry : all_endpoints.entrySet()) {
             final Map<String, String> urls = entry.getValue();
             for (Map.Entry<String, String> urlEntry : urls.entrySet()) {
-                if (endpointType.equals(urlEntry.getKey()) && 
+                if (endpointTypes.contains(urlEntry.getKey()) && 
                         match(path, urlEntry.getValue())) {
                     matched_endpoints.put(entry.getKey(), urlEntry);
                 }
@@ -56,10 +58,12 @@ public class BeaconEndpointsMatcher {
      * 
      * @param path current request URL path
      * 
-     * @return typed endpoint (e.g. 'genomicVariant', 
+     * @return a set of typed endpoints (e.g. 'genomicVariant', 
      * 'genomicVariant:genomicVariant', 'genomicVariant:analysis') or null
      */
-    private String getEndpointType(String path) {
+    private Set<String> getEndpointTypes(String path) {
+        final Set<String> types = new HashSet();
+        
         final BeaconMap map = map_response.maps().getResponse();
         if (map != null) {
             final Map<String, Endpoint> endpoints = map.getEndpointSets();
@@ -72,10 +76,12 @@ public class BeaconEndpointsMatcher {
                     }
                     
                     if (match(path, endpoint.getRootUrl())) {
-                        return entryType;
+                        types.add(entryType);
+                        continue;
                     }
                     if (match(path, endpoint.getSingleEntryUrl())) {
-                        return entryType + ":" + entryType;
+                        types.add(entryType + ":" + entryType);
+                        continue;
                     }
                     
                     final Map<String, RelatedEndpoint> related_endpont = endpoint.getEndpoints();
@@ -87,14 +93,16 @@ public class BeaconEndpointsMatcher {
                                 if (relEntryType == null) {
                                     relEntryType = rel_entry.getKey();
                                 }
-                                return entryType + ":" + relEntryType;
+                                types.add(entryType + ":" + relEntryType);
+                                break;
                             }
                         }
                     }
                 }
             }
         }
-        return null;
+
+        return types;
     }
 
     /**
