@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+  Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
   and Barcelona Supercomputing Center
 
   Modifications to the initial code base are copyright of their respective
@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>es.bsc.inb.ga4gh</groupId>
     <artifactId>beacon-network-v2</artifactId>
-    <version>0.0.11-SNAPSHOT</version>
+    <version>0.0.11</version>
     <packaging>war</packaging>
 
     <description>
@@ -94,7 +94,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.2</version>
+                <version>3.4.0</version>
             </plugin>
         </plugins>
     </build>
