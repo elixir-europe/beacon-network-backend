@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,12 +115,14 @@ public class BeaconNetworkAggregator {
             query = requestAnalyzer.getRequestQuery(request);
         }
 
+        final UUID xid = UUID.randomUUID();
+
         final List<CompletableFuture<HttpResponse<AbstractBeaconResponse>>> invocations = new ArrayList();
         
         Map<String, Map.Entry<String, String>> matched_endpoints = matcher.match(request);
         for (Map.Entry<String, Map.Entry<String, String>> entry : matched_endpoints.entrySet()) {
             final Map.Entry<String, String> endpoint = entry.getValue();
-            final BeaconResponseProcessor processor = new BeaconResponseProcessor(
+            final BeaconResponseProcessor processor = new BeaconResponseProcessor(xid,
                     entry.getKey(), endpoint.getKey(), endpoint.getValue(), 
                     query != null ? query.getTestMode() : null, data, schema);
 

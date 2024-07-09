@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -371,9 +371,12 @@ public class BeaconNetworkResponseBuilder {
             }
         }
 
-        final BeaconLogEntity log_entry = new BeaconLogEntity(REQUEST_TYPE.QUERY, 
-            method, response.request().uri().toString(), response.statusCode(), 
-            message, req, res);
+        final BeaconLogEntity log_entry = new BeaconLogEntity(publisher.xid, 
+                REQUEST_TYPE.QUERY, method, response.request().uri().toString(), 
+                response.statusCode(), message, req, res);
+        
+        // set response processing time
+        log_entry.setTime(System.currentTimeMillis()- publisher.time);
         
         log.log(log_entry);
     }

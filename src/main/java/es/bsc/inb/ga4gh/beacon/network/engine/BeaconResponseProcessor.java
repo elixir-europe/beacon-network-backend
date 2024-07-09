@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -52,6 +52,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Flow;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +67,7 @@ public class BeaconResponseProcessor implements BodyPublisher,
     private final static Jsonb JSONB = JsonbBuilder.create(new JsonbConfig()
             .withDeserializers(new BeaconResponseDeserializer()));
 
+    public final UUID xid;
     public final String beaconId;
     public final String entityType;
     public final String template;
@@ -74,12 +76,15 @@ public class BeaconResponseProcessor implements BodyPublisher,
     public byte[] req;
     public byte[] res;
     
+    public final long time;
+    
     private final BodyPublisher delegate;
     
     private final JsonSchema schema;
     
-    public BeaconResponseProcessor(String beaconId, String entityType, String template,
-            Boolean testMode, byte[] data, JsonSchema schema) {        
+    public BeaconResponseProcessor(UUID xid, String beaconId, String entityType, 
+            String template, Boolean testMode, byte[] data, JsonSchema schema) {        
+        this.xid = xid;
         this.beaconId = beaconId;
         this.entityType = entityType;
         this.template = template;
@@ -87,6 +92,8 @@ public class BeaconResponseProcessor implements BodyPublisher,
         this.req = data;
         delegate = HttpRequest.BodyPublishers.ofByteArray(data);
         this.schema = schema;
+        
+        time = System.currentTimeMillis();
     }
 
     @Override

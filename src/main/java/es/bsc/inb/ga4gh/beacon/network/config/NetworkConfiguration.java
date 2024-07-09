@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -175,16 +176,19 @@ public class NetworkConfiguration {
      * @param endpoint Beacon's API endpoint
      */
     private void updateBeacon(String endpoint) {
+        
+        final UUID xid = UUID.randomUUID();
+        
         final List<BeaconValidationMessage> err = new ArrayList();
         String beacon_id = getBeaconId(endpoint);
-        if (updateMetadata(beacon_id, endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, 
+        if (updateMetadata(xid, beacon_id, endpoint, BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA, 
                 BeaconLogLevel.METADATA, err)) { // always write "/info" metadata
             if (err.isEmpty()) {
                 // beaconId can't be null if no errors in metadata!
                 for (BeaconMetadataSchema schema : BeaconMetadataSchema.values()) {
                     if (BeaconMetadataSchema.BEACON_INFO_RESPONSE_SCHEMA != schema) {
                         final int nerrors = err.size();
-                        updateMetadata(beacon_id, endpoint, schema, BeaconLogLevel.LEVEL, err);
+                        updateMetadata(xid, beacon_id, endpoint, schema, BeaconLogLevel.LEVEL, err);
                         if (beacon_id != null && nerrors != err.size()) {
                             metadata.get(schema).remove(beacon_id);
                         }
@@ -218,6 +222,7 @@ public class NetworkConfiguration {
     /**
      * Update Beacon's metadata.
      * 
+     * @param xid transaction id
      * @param beacon_id known Beacon's identifier (may be null) 
      * @param endpoint Beacon's API endpoint
      * @param schema Beacon's metadata type (INFO, MAP, ENTRY_TYPES, etc.)
@@ -226,21 +231,25 @@ public class NetworkConfiguration {
      * 
      * @return false if no changes in metadata happened, true otherwise
      */
-    private boolean updateMetadata(String beacon_id, String endpoint, 
+    private boolean updateMetadata(UUID xid, String beacon_id, String endpoint, 
             BeaconMetadataSchema schema, BeaconLogLevel level,
             List<BeaconValidationMessage> errors) {
         
         boolean changed = true;
         
+        final long start_time = System.currentTimeMillis();
+        
         List<BeaconValidationMessage> err = new ArrayList();
         final String json = validator.loadMetadata(endpoint, schema, new ValidationErrorsCollector(err));
         errors.addAll(err);
         
-        final BeaconLogEntity log_entry = new BeaconLogEntity(REQUEST_TYPE.METADATA, 
+        final BeaconLogEntity log_entry = new BeaconLogEntity(xid, REQUEST_TYPE.METADATA, 
                 METHOD.GET, endpoint + validator.ENDPOINTS.get(schema), 
                 err.isEmpty() ? (Integer)200 : err.get(0).code,
                 err.isEmpty() ? null : err.get(0).message, null, json);
 
+        log_entry.setTime(System.currentTimeMillis()- start_time);
+        
         if (json != null) {
             final String metadata_endpoint = endpoint + validator.ENDPOINTS.get(schema);
             
