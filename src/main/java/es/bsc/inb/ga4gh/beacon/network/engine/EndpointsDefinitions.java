@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -206,6 +207,24 @@ public class EndpointsDefinitions {
         }
     }
     
+    /**
+     * Remove the endpoint template, so it wont be considered for the execution.
+     * 
+     * @param uri the endpoint template
+     */
+    public void removeEndpoint(String uri) {
+        for (Map.Entry<String, Map<String, String>> entry : endpoints.entrySet()) {
+            final Map<String, String> urls = entry.getValue();
+            final Iterator<Map.Entry<String, String>> iter = urls.entrySet().iterator();
+            while (iter.hasNext()) {
+                final Map.Entry<String, String> urlEntry = iter.next();
+                if (uri.equals(urlEntry.getValue())) {
+                    iter.remove();
+                }
+            }
+        }
+    }
+
     /**
      * 
      * @param urls

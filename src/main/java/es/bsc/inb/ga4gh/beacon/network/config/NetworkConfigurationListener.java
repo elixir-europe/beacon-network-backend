@@ -26,7 +26,6 @@
 package es.bsc.inb.ga4gh.beacon.network.config;
 
 import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
-import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME;
 import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_FILE;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Event;
@@ -72,10 +71,10 @@ public class NetworkConfigurationListener implements ServletContextListener {
 
     @PostConstruct
     public void init() {
-        final String config_dir = System.getenv(BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME);
-        if (config_dir != null) {
+        if (ConfigurationProperties.BN_CONFIG_DIR_PROPERTY != null) {
             try {
-                watcher = new BeaconConfigFileWatcher(Paths.get(config_dir));
+                watcher = new BeaconConfigFileWatcher(
+                        Paths.get(ConfigurationProperties.BN_CONFIG_DIR_PROPERTY));
             } catch(IOException ex) {
                 Logger.getLogger(NetworkConfigurationListener.class.getName()).log(Level.SEVERE, null, ex);
             }

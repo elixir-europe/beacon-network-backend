@@ -29,6 +29,7 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestBody;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestMeta;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestQuery;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.AbstractBeaconResponse;
+import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconFrameworkSchema;
 import es.elixir.bsc.json.schema.JsonSchemaReader;
 import es.elixir.bsc.json.schema.model.JsonSchema;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -122,15 +124,22 @@ public class BeaconNetworkAggregator {
         Map<String, Map.Entry<String, String>> matched_endpoints = matcher.match(request);
         for (Map.Entry<String, Map.Entry<String, String>> entry : matched_endpoints.entrySet()) {
             final Map.Entry<String, String> endpoint = entry.getValue();
-            final BeaconResponseProcessor processor = new BeaconResponseProcessor(xid,
-                    entry.getKey(), endpoint.getKey(), endpoint.getValue(), 
+            final BeaconResponseProcessor processor = new BeaconResponseProcessor(
+                    xid, entry.getKey(), endpoint.getKey(), endpoint.getValue(), 
                     query != null ? query.getTestMode() : null, data, schema);
 
             final Builder builder = getInvocation(endpoint.getValue(), request);
             builder.method(request.getMethod(), processor);
 
             CompletableFuture<HttpResponse<AbstractBeaconResponse>> future =
-                    http_client.sendAsync(builder.build(), processor);
+                    http_client.sendAsync(builder.build(), processor)
+                            .orTimeout(ConfigurationProperties.BN_REQUEST_TIMEOUT_PROPERTY, TimeUnit.SECONDS)
+                            .handle((r, ex) -> {
+                                if (ex != null) {
+                                    throw new BeaconTimeoutException(processor);
+                                }
+                                return r;
+                            });
 
             invocations.add(future);
         }
@@ -150,6 +159,7 @@ public class BeaconNetworkAggregator {
                 .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+//                .timeout(Duration.ofMillis(1));
         
         final Enumeration<String> authorization = request.getHeaders(HttpHeaders.AUTHORIZATION);
         if (authorization != null && authorization.hasMoreElements()) {

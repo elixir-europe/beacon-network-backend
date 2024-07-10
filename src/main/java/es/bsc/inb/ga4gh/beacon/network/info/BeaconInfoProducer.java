@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -27,10 +27,10 @@ package es.bsc.inb.ga4gh.beacon.network.info;
 
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResponse;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResults;
+import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfigUpdatedEvent;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
 import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
-import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME;
 import es.bsc.inb.ga4gh.beacon.network.model.BeaconNetworkInfoResponse;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconValidationMessage;
 import jakarta.annotation.PostConstruct;
@@ -83,9 +83,8 @@ public class BeaconInfoProducer implements Serializable {
     }
 
     private BeaconNetworkInfoResponse readBeaconInfo() {
-        final String config_dir = System.getenv(BEACON_NETWORK_CONFIG_DIR_PROPERTY_NAME);
-        if (config_dir != null) {
-            final Path path = Paths.get(config_dir, BEACON_INFO_FILE);
+        if (ConfigurationProperties.BN_CONFIG_DIR_PROPERTY != null) {
+            final Path path = Paths.get(ConfigurationProperties.BN_CONFIG_DIR_PROPERTY, BEACON_INFO_FILE);
             if (Files.exists(path)) {
                 try {
                     final BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
@@ -153,15 +152,22 @@ public class BeaconInfoProducer implements Serializable {
                         responses.add(response);
                     }
                     beacon_info.setResponses(responses.isEmpty() ? null : responses);
-                    setMetadataParsingErrors();
+                    updateMetadataParsingErrors();
                 }
             }
         }
     }
 
-    private void setMetadataParsingErrors() {
+    public void updateMetadataParsingErrors() {
+        BeaconInfoResults results = beacon_info.getResponse();
+        if (results == null) {
+            beacon_info.setResponse(results = new BeaconInfoResults());
+        }
+            
         final Map<String, List<BeaconValidationMessage>> errors = config.getErrors();
-        if (!errors.isEmpty()) {
+        if (errors.isEmpty()) {
+            results.setInfo(null);
+        } else {
             final JsonArrayBuilder endpoints = Json.createArrayBuilder();
             for (Map.Entry<String, List<BeaconValidationMessage>> entry : errors.entrySet()) {
                 final JsonObjectBuilder endpoint = Json.createObjectBuilder();
@@ -189,11 +195,6 @@ public class BeaconInfoProducer implements Serializable {
                 }
                 endpoint.add("errors", arr);
                 endpoints.add(endpoint);
-            }
-            
-            BeaconInfoResults results = beacon_info.getResponse();
-            if (results == null) {
-                beacon_info.setResponse(results = new BeaconInfoResults());
             }
             results.setInfo(Json.createObjectBuilder().add("metadata_errors", endpoints).build());
         }

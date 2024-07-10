@@ -42,16 +42,21 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconResponseSumm
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconResultset;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconResultsets;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconResultsetsResponse;
+import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
+import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
 import es.bsc.inb.ga4gh.beacon.network.info.BeaconInfoProducer;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLog;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.METHOD;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.REQUEST_TYPE;
+import es.bsc.inb.ga4gh.beacon.validator.BeaconValidationErrorType;
+import es.bsc.inb.ga4gh.beacon.validator.BeaconValidationMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.ws.rs.core.Response;
+import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,7 +64,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -73,6 +80,12 @@ public class BeaconNetworkResponseBuilder {
     
     @Inject
     private BeaconInfoProducer beacon_info;
+    
+    @Inject
+    private NetworkConfiguration config;
+
+    @Inject
+    private EndpointsDefinitions endpoints;
     
     @Inject
     private BeaconLog log;
@@ -148,27 +161,78 @@ public class BeaconNetworkResponseBuilder {
         return Response.ok(aggregated).build();
     }
 
-    private List<AbstractBeaconResponse> getResultsets(List<CompletableFuture<HttpResponse<AbstractBeaconResponse>>> invocations) {
+    private List<AbstractBeaconResponse> getResultsets(
+            List<CompletableFuture<HttpResponse<AbstractBeaconResponse>>> invocations) {
 
         final List<AbstractBeaconResponse> responses = new ArrayList();
         
         for (CompletableFuture<HttpResponse<AbstractBeaconResponse>> invocation : invocations) {
-            try {
-                final HttpResponse<AbstractBeaconResponse> response = invocation.get(10, TimeUnit.MINUTES);
+            
+            // first timeout (seconds) before we go for the cache
+            long timeout = ConfigurationProperties.BN_CACHE_TIMEOUT_PROPERTY;
 
-                if (response != null) {
-                    if (response.body() != null) {
-                        responses.add(response.body());
+            while (true) {
+                try {
+                    final HttpResponse<AbstractBeaconResponse> response = 
+                            invocation.get(timeout, TimeUnit.SECONDS);
+                    if (response != null) {
+                        if (response.body() != null) {
+                            responses.add(response.body());
+                        }
+                        log(response);
+
+                        if (response.statusCode() >= 300) {
+                            final BodyPublisher bp = response.request().bodyPublisher().orElse(null);
+                            if (bp instanceof BeaconResponseProcessor processor) {
+                                final BeaconValidationMessage message = new BeaconValidationMessage(
+                                        BeaconValidationErrorType.CONNECTION_ERROR,
+                                        response.statusCode(),
+                                        processor.template, null,
+                                        String.format("error calling endpoint '%s'", processor.template));
+                                processError(processor, message);
+                            }
+                        }
                     }
-                    log(response);
+                } catch (TimeoutException ex) {
+                    timeout = Long.MAX_VALUE; // effectively no timeout
+                    continue;
+                } catch (ExecutionException ex) {
+                    final Throwable th = ex.getCause();
+                    if (th instanceof BeaconTimeoutException tex) {
+                        // got no anwer from the endpoint
+                        final BeaconValidationMessage message = new BeaconValidationMessage(
+                                BeaconValidationErrorType.CONNECTION_ERROR,
+                                408, // Request Timeout
+                                tex.processor.template, null,
+                                String.format("request timeout '%s'", tex.processor.template));
+                        processError(tex.processor, message);
+                    } else {
+                        Logger.getLogger(BeaconNetworkResponseBuilder.class.getName()).log(
+                                Level.INFO, ex.getMessage());
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(BeaconNetworkResponseBuilder.class.getName()).log(
+                            Level.INFO, ex.getMessage());
                 }
-            } catch (Exception ex) {
-                Logger.getLogger(BeaconNetworkResponseBuilder.class.getName()).log(
-                        Level.INFO, ex.getMessage());
+                break; // got response whether good or bad
             }
         }
 
         return responses;
+    }
+    
+    private void processError(BeaconResponseProcessor processor,
+            BeaconValidationMessage message) {
+        endpoints.removeEndpoint(processor.template);
+        
+        final String endpoint = config.getEndpoints().get(processor.beaconId);
+        List<BeaconValidationMessage> errors = config.getErrors().get(endpoint);
+        if (errors == null) {
+            config.getErrors().put(endpoint, errors = new ArrayList());
+        }
+        errors.add(message);
+        
+        beacon_info.updateMetadataParsingErrors();
     }
     
     /**
