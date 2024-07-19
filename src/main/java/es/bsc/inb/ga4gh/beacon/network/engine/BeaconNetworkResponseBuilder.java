@@ -69,6 +69,8 @@ public class BeaconNetworkResponseBuilder {
             BeaconRequestQuery query, 
             List<AbstractBeaconResponse> beacons_responses) {
 
+        final String include_resultset_responses = query.getIncludeResultsetResponses();
+
         AbstractBeaconResponse aggregated;
         
         if (beacons_responses.stream().anyMatch(BeaconCollectionsResponse.class::isInstance)) {
@@ -78,9 +80,11 @@ public class BeaconNetworkResponseBuilder {
             
             for (AbstractBeaconResponse beacon_response : beacons_responses) {
                 if (beacon_response instanceof BeaconCollectionsResponse res) {
-                    mergeMeta(response, res);
-                    mergeCollections(response, res);
-                    mergeSummary(response, res);
+                    if (checkIncludeResponse(include_resultset_responses, res)) {
+                        mergeMeta(response, res);
+                        mergeCollections(response, res);
+                        mergeSummary(response, res);
+                    }
                 }
             }
             aggregated = response;
@@ -94,9 +98,11 @@ public class BeaconNetworkResponseBuilder {
           
             for (AbstractBeaconResponse beacon_response : beacons_responses) {
                 if (beacon_response instanceof BeaconResultsetsResponse res) {
-                    mergeMeta(response, res);
-                    mergeResultsets(response, res);
-                    mergeSummary(response, res);
+                    if (checkIncludeResponse(include_resultset_responses, res)) {
+                        mergeMeta(response, res);
+                        mergeResultsets(response, res);
+                        mergeSummary(response, res);
+                    }
                 } else if (beacon_response instanceof BeaconErrorResponse err) {
                     final BeaconResultset empty = new BeaconResultset();
                     empty.setExists(false);
@@ -310,5 +316,27 @@ public class BeaconNetworkResponseBuilder {
 //        }
 
         return response_meta;
+    }
+    
+    private boolean checkIncludeResponse(String include_resultset_responses, BeaconResponse response) {
+        if ("ALL".equals(include_resultset_responses)) {
+            return true;
+        }
+        if ("NONE".equals(include_resultset_responses)) {
+            return false;
+        }
+        
+        final BeaconResponseSummary response_summary = response.getResponseSummary();
+        if (response_summary != null) {
+            if (Boolean.TRUE.equals(response_summary.getExists())) {
+                return true;
+            }
+            final Integer num_total_results = response_summary.getNumTotalResults();
+            if (num_total_results != null && num_total_results > 0) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
