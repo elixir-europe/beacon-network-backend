@@ -275,6 +275,7 @@ public class BeaconNetworkResponseBuilder {
             final List<BeaconQueryFilter> filters = request_query.getFilters();
             if (filters != null) {
                 request_summary.setFilters(filters.stream()
+                        .filter(Objects::nonNull)
                         .map(BeaconQueryFilter::toString)
                         .collect(Collectors.toList()));
             }
