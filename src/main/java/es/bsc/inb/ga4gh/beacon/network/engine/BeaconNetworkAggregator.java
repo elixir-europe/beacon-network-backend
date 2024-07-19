@@ -176,7 +176,7 @@ public class BeaconNetworkAggregator {
             
             try {
                 final HttpResponse<AbstractBeaconResponse> response = 
-                        invocation.get(ConfigurationProperties.BN_CANCEL_REQUEST_TIMEOUT_PROPERTY, TimeUnit.SECONDS);
+                        invocation.get(ConfigurationProperties.BN_DISCARD_REQUEST_TIMEOUT_PROPERTY, TimeUnit.SECONDS);
                 if (response != null) {
                     if (response.body() != null) {
                         responses.add(response.body());
