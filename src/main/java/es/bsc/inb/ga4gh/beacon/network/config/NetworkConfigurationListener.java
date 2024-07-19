@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -100,7 +100,8 @@ public class NetworkConfigurationListener implements ServletContextListener {
         final Runnable watchdog = () -> config_changed_event.fireAsync(
                 new NetworkConfigChangedEvent(beacon_network_urls));
 
-        timer.scheduleAtFixedRate(watchdog, 60, 60, TimeUnit.MINUTES);
+        timer.scheduleAtFixedRate(watchdog, ConfigurationProperties.BN_REFRESH_METADATA_TIMEOUT_PROPERTY
+                , ConfigurationProperties.BN_REFRESH_METADATA_TIMEOUT_PROPERTY, TimeUnit.MINUTES);
         
         if (watcher != null) {
             timer.submit(watcher);

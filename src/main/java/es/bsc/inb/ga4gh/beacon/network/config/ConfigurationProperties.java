@@ -1,3 +1,28 @@
+/**
+ * *****************************************************************************
+ * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * and Barcelona Supercomputing Center (BSC)
+ *
+ * Modifications to the initial code base are copyright of their respective
+ * authors, or their employers as appropriate.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ * *****************************************************************************
+ */
+
 package es.bsc.inb.ga4gh.beacon.network.config;
 
 /**
@@ -7,40 +32,31 @@ package es.bsc.inb.ga4gh.beacon.network.config;
 public final class ConfigurationProperties {
     
     public final static String BN_CONFIG_DIR_PROPERTY_NAME = "BEACON_NETWORK_CONFIG_DIR";
-    public final static String BN_CACHE_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_CACHE_TIMEOUT";
+    
     public final static String BN_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REQUEST_TIMEOUT";
+    public final static String BN_CANCEL_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_CANCEL_REQUEST_TIMEOUT";
+    public final static String BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REFRESH_METADATA_TIMEOUT";
     
     public final static String BN_CONFIG_DIR_PROPERTY;
-    public final static long BN_CACHE_TIMEOUT_PROPERTY;
+    
+    public final static long BN_CANCEL_REQUEST_TIMEOUT_PROPERTY;
     public final static long BN_REQUEST_TIMEOUT_PROPERTY;
+    public final static long BN_REFRESH_METADATA_TIMEOUT_PROPERTY;
     
     static {
         BN_CONFIG_DIR_PROPERTY = System.getenv(BN_CONFIG_DIR_PROPERTY_NAME);
-        
-        final String cache_timeout = System.getenv(BN_CACHE_TIMEOUT_PROPERTY_NAME);
-        if (cache_timeout == null) {
-            BN_CACHE_TIMEOUT_PROPERTY = 5;
-        } else {
-            long bn_cache_timeout;
+        BN_CANCEL_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_CANCEL_REQUEST_TIMEOUT_PROPERTY_NAME, 5);
+        BN_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_REQUEST_TIMEOUT_PROPERTY_NAME, 600);
+        BN_REFRESH_METADATA_TIMEOUT_PROPERTY = readProperty(BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME, 60);
+    }
+    
+    private final static long readProperty(String property, long def) {
+        final String val = System.getenv(property);
+        if (val != null) {
             try {
-                bn_cache_timeout = Long.parseLong(cache_timeout);
-            } catch (NumberFormatException ex) {
-                bn_cache_timeout = 5;
-            }
-            BN_CACHE_TIMEOUT_PROPERTY = bn_cache_timeout;
+                return Long.parseLong(val);
+            } catch (NumberFormatException ex) {}
         }
-        
-        final String request_timeout = System.getenv(BN_REQUEST_TIMEOUT_PROPERTY_NAME);
-        if (request_timeout == null) {
-            BN_REQUEST_TIMEOUT_PROPERTY = 600;
-        } else {
-            long bn_request_timeout;
-            try {
-                bn_request_timeout = Long.parseLong(request_timeout);
-            } catch (NumberFormatException ex) {
-                bn_request_timeout = 600;
-            }
-            BN_REQUEST_TIMEOUT_PROPERTY = bn_request_timeout;
-        }
+        return def;
     }
 }

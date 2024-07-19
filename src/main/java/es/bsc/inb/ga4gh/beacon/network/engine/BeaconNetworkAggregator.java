@@ -29,7 +29,11 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestBody;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestMeta;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestQuery;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.AbstractBeaconResponse;
+import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconError;
+import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconErrorResponse;
 import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLog;
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconFrameworkSchema;
 import es.elixir.bsc.json.schema.JsonSchemaReader;
 import es.elixir.bsc.json.schema.model.JsonSchema;
@@ -49,6 +53,7 @@ import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +63,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +83,9 @@ public class BeaconNetworkAggregator {
     @Inject
     private BeaconNetworkResponseBuilder responseBuilder;
     
+    @Inject
+    private BeaconLog log;
+
     private JsonSchema schema;
     
     private HttpClient http_client;
@@ -119,7 +128,7 @@ public class BeaconNetworkAggregator {
 
         final UUID xid = UUID.randomUUID();
 
-        final List<CompletableFuture<HttpResponse<AbstractBeaconResponse>>> invocations = new ArrayList();
+        final List<CompletableFuture<HttpResponse>> invocations = new ArrayList();
         
         Map<String, Map.Entry<String, String>> matched_endpoints = matcher.match(request);
         for (Map.Entry<String, Map.Entry<String, String>> entry : matched_endpoints.entrySet()) {
@@ -130,15 +139,21 @@ public class BeaconNetworkAggregator {
 
             final Builder builder = getInvocation(endpoint.getValue(), request);
             builder.method(request.getMethod(), processor);
+            final HttpRequest req = builder.build();
 
-            CompletableFuture<HttpResponse<AbstractBeaconResponse>> future =
+            CompletableFuture<HttpResponse> future =
                     http_client.sendAsync(builder.build(), processor)
                             .orTimeout(ConfigurationProperties.BN_REQUEST_TIMEOUT_PROPERTY, TimeUnit.SECONDS)
-                            .handle((r, ex) -> {
-                                if (ex != null) {
-                                    throw new BeaconTimeoutException(processor);
+                            .handle((res, ex) -> {
+                                if (res != null) {
+                                    log(res);
+                                } else {
+                                    final String err_message = 
+                                            String.format("request timeout '%s'", processor.template);
+                                    
+                                    log(req, 408, err_message);
                                 }
-                                return r;
+                                return res;
                             });
 
             invocations.add(future);
@@ -148,7 +163,36 @@ public class BeaconNetworkAggregator {
             // return error response;
         }
         
-        return responseBuilder.build(meta, query, invocations);
+        final List<AbstractBeaconResponse> beacons_responses = getResultsets(invocations);
+        return responseBuilder.build(meta, query, beacons_responses);
+    }
+
+    private List<AbstractBeaconResponse> getResultsets(
+            List<CompletableFuture<HttpResponse>> invocations) {
+
+        final List<AbstractBeaconResponse> responses = new ArrayList();
+        
+        for (CompletableFuture<HttpResponse> invocation : invocations) {
+            
+            try {
+                final HttpResponse<AbstractBeaconResponse> response = 
+                        invocation.get(ConfigurationProperties.BN_CANCEL_REQUEST_TIMEOUT_PROPERTY, TimeUnit.SECONDS);
+                if (response != null) {
+                    if (response.body() != null) {
+                        responses.add(response.body());
+                    }
+                    log(response);
+                }
+            } catch (TimeoutException ex) {
+                Logger.getLogger(BeaconNetworkResponseBuilder.class.getName()).log(
+                            Level.INFO, ex.getMessage());
+            } catch (Exception ex) {
+                Logger.getLogger(BeaconNetworkResponseBuilder.class.getName()).log(
+                        Level.INFO, ex.getMessage());
+            }
+        }
+
+        return responses;
     }
 
     private Builder getInvocation(String endpoint, HttpServletRequest request) {
@@ -159,7 +203,6 @@ public class BeaconNetworkAggregator {
                 .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-//                .timeout(Duration.ofMillis(1));
         
         final Enumeration<String> authorization = request.getHeaders(HttpHeaders.AUTHORIZATION);
         if (authorization != null && authorization.hasMoreElements()) {
@@ -168,5 +211,41 @@ public class BeaconNetworkAggregator {
         }
 
         return builder;        
+    }
+    
+    private void log(HttpResponse<AbstractBeaconResponse> response) {
+        
+        String message = null;
+        if (response.body() instanceof BeaconErrorResponse error) {
+            final BeaconError err = error.getBeaconError();
+            if (err != null) {
+                message = err.getErrorMessage();
+            }
+        }
+
+        log(response.request(), response.statusCode(), message);
+    }
+
+    private void log(HttpRequest request, int code, String message) {
+        
+        final BeaconLogEntity.METHOD method = BeaconLogEntity.METHOD.valueOf(request.method());
+        
+        final BeaconResponseProcessor publisher = 
+                (BeaconResponseProcessor)request.bodyPublisher().get();
+        
+        final String req = publisher.req.length == 0 ? null : 
+                new String(publisher.req, StandardCharsets.UTF_8);
+        
+        final String res = publisher.res == null ? null :
+                new String(publisher.res, StandardCharsets.UTF_8);
+        
+        final BeaconLogEntity log_entry = new BeaconLogEntity(publisher.xid, 
+                BeaconLogEntity.REQUEST_TYPE.QUERY, method, request.uri().toString(), 
+                code, message, req, res);
+        
+        // set response processing time
+        log_entry.setTime(System.currentTimeMillis() - publisher.time);
+        
+        log.log(log_entry);
     }
 }
