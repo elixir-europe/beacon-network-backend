@@ -71,6 +71,14 @@ export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
 It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-info.json` so deployers may change the beacon identifier and other metatada.
 
+There are several timeouts that may be configured via environment variables:
+- `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
+- `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` - timeout in seconds (default 5 sec.) after which the response from a Beacon is discarded.
+- `BEACON_NETWORK_REQUEST_TIMEOUT` - timeout in seconds (default 600 sec.) after which the request to the Beacon is cancelled.
+
+Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
+If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
+
 ### SQL Database
 
 The Beacon Network Aggregator uses [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) for logging.
