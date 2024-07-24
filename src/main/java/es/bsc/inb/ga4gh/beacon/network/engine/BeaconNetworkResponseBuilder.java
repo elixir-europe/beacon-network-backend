@@ -106,7 +106,7 @@ public class BeaconNetworkResponseBuilder {
                 } else if (beacon_response instanceof BeaconErrorResponse err) {
                     final BeaconResultset empty = new BeaconResultset();
                     empty.setExists(false);
-                    BeaconError error = err.getBeaconError();
+                    BeaconError error = err.getError();
                     if (error != null) {
                         JsonObjectBuilder b = Json.createObjectBuilder();
                         String errorMessage = error.getErrorMessage();

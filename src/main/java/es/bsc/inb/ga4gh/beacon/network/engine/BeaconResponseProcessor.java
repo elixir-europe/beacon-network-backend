@@ -123,7 +123,7 @@ public class BeaconResponseProcessor implements BodyPublisher,
             final BeaconError error = new BeaconError();
             error.setErrorCode(responseInfo.statusCode());
             error.setErrorMessage(msg);
-            response.setBeaconError(error);
+            response.setError(error);
 
             return BodySubscribers.replacing(response);
         }
@@ -204,7 +204,7 @@ public class BeaconResponseProcessor implements BodyPublisher,
         final BeaconError error = new BeaconError();
         error.setErrorCode(0);
         error.setErrorMessage(msg);
-        response.setBeaconError(error);
+        response.setError(error);
         return response;
     }
 }

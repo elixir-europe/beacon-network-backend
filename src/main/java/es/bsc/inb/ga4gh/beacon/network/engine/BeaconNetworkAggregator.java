@@ -217,7 +217,7 @@ public class BeaconNetworkAggregator {
         
         String message = null;
         if (response.body() instanceof BeaconErrorResponse error) {
-            final BeaconError err = error.getBeaconError();
+            final BeaconError err = error.getError();
             if (err != null) {
                 message = err.getErrorMessage();
             }
