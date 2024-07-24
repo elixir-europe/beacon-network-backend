@@ -78,6 +78,9 @@ public class BeaconNetworkAggregator {
     private BeaconNetworkRequestAnalyzer requestAnalyzer;
     
     @Inject
+    private BeaconNetworkTokenExchanger tokenExchanger;
+    
+    @Inject
     private BeaconEndpointsMatcher matcher;
     
     @Inject
@@ -127,7 +130,7 @@ public class BeaconNetworkAggregator {
         }
 
         final UUID xid = UUID.randomUUID();
-
+        
         final List<CompletableFuture<HttpResponse>> invocations = new ArrayList();
         
         Map<String, Map.Entry<String, String>> matched_endpoints = matcher.match(request);
@@ -150,7 +153,7 @@ public class BeaconNetworkAggregator {
                                 } else {
                                     final String err_message = 
                                             String.format("request timeout '%s'", processor.template);
-                                    
+
                                     log(req, 408, err_message);
                                 }
                                 return res;
@@ -206,7 +209,7 @@ public class BeaconNetworkAggregator {
         
         final Enumeration<String> authorization = request.getHeaders(HttpHeaders.AUTHORIZATION);
         if (authorization != null && authorization.hasMoreElements()) {
-            Collections.list(authorization).stream()
+            tokenExchanger.exchange(endpoint, Collections.list(authorization)).stream()
                     .forEach(h -> builder.header(HttpHeaders.AUTHORIZATION, h));
         }
 
@@ -220,7 +223,7 @@ public class BeaconNetworkAggregator {
             final BeaconError err = error.getError();
             if (err != null) {
                 message = err.getErrorMessage();
-            }
+}
         }
 
         log(response.request(), response.statusCode(), message);

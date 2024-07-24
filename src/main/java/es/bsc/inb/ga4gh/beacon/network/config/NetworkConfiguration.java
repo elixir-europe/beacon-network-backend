@@ -25,6 +25,7 @@
 
 package es.bsc.inb.ga4gh.beacon.network.config;
 
+import es.bsc.inb.ga4gh.beacon.network.model.OauthProtectedResource;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.ServiceConfiguration;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconEntryTypesResponse;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconFilteringTermsResponse;
@@ -90,6 +91,12 @@ public class NetworkConfiguration {
      */
     private Map<String, String> endpoints;
     
+    /**
+     * Map of beacons' authentication servers
+     * where key is a beacon's endpoint (e.g. 'https://beacons.bsc.es/beacon/v2.0.0/')
+     */
+    private Map<String, OauthProtectedResource> protected_resources;
+    
     private Map<BeaconMetadataSchema, Map<String, ? extends BeaconInformationalResponse>> metadata;
     
     private Map<String, List<BeaconValidationMessage>> errors;
@@ -107,6 +114,7 @@ public class NetworkConfiguration {
     @PostConstruct
     public void init() {
         endpoints = new ConcurrentHashMap();
+        protected_resources = new ConcurrentHashMap();
         metadata = new ConcurrentHashMap();
         errors = new ConcurrentHashMap();
         hashes = new ConcurrentHashMap();
@@ -213,6 +221,13 @@ public class NetworkConfiguration {
                     }                    
                 }
                 errors.put(endpoint, err);
+            }
+            
+            final OauthProtectedResource resource = loadOauthProtectedResource(endpoint);
+            if (resource == null) {
+                protected_resources.remove(endpoint);
+            } else {
+                protected_resources.put(endpoint, resource);
             }
         }
     }
@@ -323,6 +338,10 @@ public class NetworkConfiguration {
         return endpoints;
     }
 
+    public Map<String, OauthProtectedResource> getProtectedResources() {
+        return protected_resources;
+    }
+    
     /**
      * Get the metadata JSON Schema parsing errors.
      * 
@@ -352,6 +371,28 @@ public class NetworkConfiguration {
     }
 
     /**
+     * Load oauth-protected-resource metadata, if provided.
+     * 
+     * @param endpoint
+     * @return 
+     */
+    private OauthProtectedResource loadOauthProtectedResource(String endpoint) {
+        try {
+            final List<BeaconValidationMessage> err = new ArrayList();
+            final String json = validator.loadMetadata(endpoint + "/.well-known/oauth-protected-resource", new ValidationErrorsCollector(err));
+            if (err.isEmpty()) {
+                return validator.parseMetadata(json, OauthProtectedResource.class);
+            }
+        } catch(Exception ex) {
+            Logger.getLogger(NetworkConfiguration.class.getName()).log(
+                    Level.SEVERE, "error loading from {0} {1}", 
+                    new Object[]{endpoint, ex.getMessage()});
+        }
+        return null;
+
+    }
+
+    /**
      * Load filtering terms by the endpoint.
      * 
      * Unlike global '/filtering_terms', per-entry filtering terms
@@ -374,5 +415,5 @@ public class NetworkConfiguration {
                     new Object[]{endpoint, ex.getMessage()});
         }
         return null;
-    }
+    }    
 }
