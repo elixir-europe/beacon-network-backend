@@ -3,7 +3,7 @@ name: Beacon Network Maven Build
 on:
   push:
     branches:
-      - master
+      - dev
 
 jobs:
   build:
