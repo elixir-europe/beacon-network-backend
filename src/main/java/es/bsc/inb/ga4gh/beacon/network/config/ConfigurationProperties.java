@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -37,6 +37,12 @@ public final class ConfigurationProperties {
     public final static String BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT";
     public final static String BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REFRESH_METADATA_TIMEOUT";
     
+    public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
+    public final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
+    public final static String BEACON_NETWORK_INFO_FILE = "beacon-network-info.json";
+    public final static String BEACON_NETWORK_MAP_FILE = "beacon-network-map.json";
+    public final static String BEACON_NETWORK_CONFIGURATION_FILE = "beacon-network-configuration.json";
+    
     public final static String BN_CONFIG_DIR_PROPERTY;
     
     public final static long BN_DISCARD_REQUEST_TIMEOUT_PROPERTY;
@@ -50,7 +56,7 @@ public final class ConfigurationProperties {
         BN_REFRESH_METADATA_TIMEOUT_PROPERTY = readProperty(BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME, 60);
     }
     
-    private final static long readProperty(String property, long def) {
+    private static long readProperty(String property, long def) {
         final String val = System.getenv(property);
         if (val != null) {
             try {

@@ -196,9 +196,7 @@ public class BeaconNetworkAggregator {
     }
 
     private Builder getInvocation(String endpoint, HttpServletRequest request) {
-        endpoint = endpoint.substring(0, endpoint.lastIndexOf("//"));
         Builder builder = HttpRequest.newBuilder(UriBuilder.fromUri(endpoint)
-                .path(request.getPathInfo())
                 .replaceQuery(request.getQueryString()).build())
                 .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)

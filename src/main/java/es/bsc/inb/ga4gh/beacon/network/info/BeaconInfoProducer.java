@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -27,10 +27,10 @@ package es.bsc.inb.ga4gh.beacon.network.info;
 
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResponse;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconInfoResults;
-import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
+import es.bsc.inb.ga4gh.beacon.network.config.BeaconNetworkConfiguration;
+import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_INFO_FILE;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfigUpdatedEvent;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
-import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
 import es.bsc.inb.ga4gh.beacon.network.model.BeaconNetworkInfoResponse;
 import es.bsc.inb.ga4gh.beacon.validator.BeaconValidationMessage;
 import jakarta.annotation.PostConstruct;
@@ -41,23 +41,10 @@ import jakarta.inject.Singleton;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
-import jakarta.json.bind.JsonbBuilder;
-import jakarta.servlet.ServletContext;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Dmitry Repchevsky
@@ -66,69 +53,18 @@ import java.util.logging.Logger;
 @Singleton
 public class BeaconInfoProducer implements Serializable {
 
-    private final static String BEACON_INFO_FILE = "beacon-info.json";
-    
     @Inject 
-    private ServletContext ctx;
+    private BeaconNetworkConfiguration cfg;
 
     @Inject
     private NetworkConfiguration config;
 
-    private FileTime last_modified_time;
-    private volatile BeaconNetworkInfoResponse beacon_info;
+    private BeaconNetworkInfoResponse beacon_info;
     
     @PostConstruct
     public void init() {
-        beacon_info = readBeaconInfo();
-    }
+        beacon_info = cfg.loadConfiguration(BEACON_NETWORK_INFO_FILE, BeaconNetworkInfoResponse.class);
 
-    private BeaconNetworkInfoResponse readBeaconInfo() {
-        if (ConfigurationProperties.BN_CONFIG_DIR_PROPERTY != null) {
-            final Path path = Paths.get(ConfigurationProperties.BN_CONFIG_DIR_PROPERTY, BEACON_INFO_FILE);
-            if (Files.exists(path)) {
-                try {
-                    final BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-                    synchronized(BeaconNetworkInfoResponse.class) {
-                        if (last_modified_time == null || last_modified_time.compareTo(attr.lastModifiedTime()) != 0) {
-                            try(InputStream in = Files.newInputStream(path, StandardOpenOption.READ)) {
-                                beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
-                                injectResponses();
-                                last_modified_time = attr.lastModifiedTime();
-                            } catch (NoSuchFileException ex) {
-                            } catch (Exception ex) {
-                                Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
-                            }
-                        }
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.WARNING, null, ex);
-                }
-            } else if (last_modified_time != null) {
-                // switch to embedded 'beacon-info.json' if custom one has been removed
-                beacon_info = null;
-                last_modified_time = null;
-            }
-        }
-
-        if (beacon_info == null) {
-            synchronized(BeaconNetworkInfoResponse.class) {
-                if (beacon_info == null) {
-                    try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE)) {
-                        if (in == null) {
-                            Logger.getLogger(BeaconInfoProducer.class.getName()).log(
-                                    Level.SEVERE, "no service info file found: %s", BEACON_NETWORK_CONFIG_DIR + BEACON_INFO_FILE);
-                        } else {
-                            beacon_info = JsonbBuilder.create().fromJson(in, BeaconNetworkInfoResponse.class);
-                            injectResponses();
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(BeaconInfoProducer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        }
-        
-        return beacon_info;
     }
 
     /**
@@ -202,7 +138,7 @@ public class BeaconInfoProducer implements Serializable {
 
     @Produces
     public BeaconNetworkInfoResponse beaconInfo() {        
-        return readBeaconInfo();
+        return beacon_info;
     }
 
 }

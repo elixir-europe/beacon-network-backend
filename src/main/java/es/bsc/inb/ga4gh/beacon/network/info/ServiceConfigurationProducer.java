@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -29,6 +29,8 @@ import es.bsc.inb.ga4gh.beacon.framework.model.v200.common.SchemaReference;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.BeaconConfiguration;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.ServiceConfiguration;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.EntryTypeDefinition;
+import es.bsc.inb.ga4gh.beacon.network.config.BeaconNetworkConfiguration;
+import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIGURATION_FILE;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfigUpdatedEvent;
 import es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration;
 import jakarta.annotation.PostConstruct;
@@ -36,17 +38,11 @@ import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.json.bind.JsonbBuilder;
-import jakarta.servlet.ServletContext;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Dmitry Repchevsky
@@ -55,10 +51,8 @@ import java.util.logging.Logger;
 @Singleton
 public class ServiceConfigurationProducer {
     
-    private final static String SERVICE_CONFIG_FILE = "BEACON-INF/configuration.json";
-    
     @Inject 
-    private ServletContext ctx;
+    private BeaconNetworkConfiguration cfg;
 
     @Inject
     private BeaconInfoProducer beacon_info;
@@ -71,27 +65,15 @@ public class ServiceConfigurationProducer {
 
     @PostConstruct
     public void init() {
-        configuration = new ServiceConfiguration();
-        configuration.setMeta(beacon_info.beaconInfo().getMeta());
-        
-        try (InputStream in = ctx.getResourceAsStream(SERVICE_CONFIG_FILE)) {
-            if (in == null) {
-                becon_configuration = new BeaconConfiguration();
-                Logger.getLogger(ServiceConfigurationProducer.class.getName()).log(
-                        Level.SEVERE, "no service configuration file found: " + SERVICE_CONFIG_FILE);
-            } else {
-                final ServiceConfiguration conf = JsonbBuilder.create().fromJson(in, ServiceConfiguration.class);
-                if (conf != null) {
-                    becon_configuration = conf.getResponse();
-                } else {
-                    becon_configuration = new BeaconConfiguration();
-                }
-                
-            }
-        } catch (IOException ex) {
-            becon_configuration = new BeaconConfiguration();
-            Logger.getLogger(ServiceConfigurationProducer.class.getName()).log(Level.SEVERE, null, ex);
+        configuration = cfg.loadConfiguration(BEACON_NETWORK_CONFIGURATION_FILE, ServiceConfiguration.class);
+        if (configuration == null) {
+            configuration = new ServiceConfiguration();
         }
+        becon_configuration = configuration.getResponse();
+        if (becon_configuration == null) {
+            configuration.setResponse(becon_configuration = new BeaconConfiguration());
+        }
+        configuration.setMeta(beacon_info.beaconInfo().getMeta());
     }
     
     /**
