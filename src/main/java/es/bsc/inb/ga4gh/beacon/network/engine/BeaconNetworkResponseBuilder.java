@@ -104,31 +104,35 @@ public class BeaconNetworkResponseBuilder {
                         mergeSummary(response, res);
                     }
                 } else if (beacon_response instanceof BeaconErrorResponse err) {
-                    final BeaconResultset empty = new BeaconResultset();
-                    empty.setExists(false);
-                    BeaconError error = err.getError();
-                    if (error != null) {
-                        JsonObjectBuilder b = Json.createObjectBuilder();
-                        String errorMessage = error.getErrorMessage();
-                        b.add("errorCode", error.getErrorCode());
-                        if (errorMessage != null) {
-                            b.add("errorMessage", error.getErrorMessage());
+                    
+                    if (!"NONE".equals(include_resultset_responses) &&
+                        !"HIT".equals(include_resultset_responses)) {
+                        final BeaconResultset empty = new BeaconResultset();
+                        empty.setExists(false);
+                        BeaconError error = err.getError();
+                        if (error != null) {
+                            JsonObjectBuilder b = Json.createObjectBuilder();
+                            String errorMessage = error.getErrorMessage();
+                            b.add("errorCode", error.getErrorCode());
+                            if (errorMessage != null) {
+                                b.add("errorMessage", error.getErrorMessage());
+                            }
+
+                            empty.setInfo(Json.createObjectBuilder().add("error", b).build());
                         }
 
-                        empty.setInfo(Json.createObjectBuilder().add("error", b).build());
-                    }
+                        final BeaconResponseMeta err_meta = err.getMeta();
+                        if (err_meta != null) {
+                            empty.setBeaconId(err_meta.getBeaconId());
+                        }
 
-                    final BeaconResponseMeta err_meta = err.getMeta();
-                    if (err_meta != null) {
-                        empty.setBeaconId(err_meta.getBeaconId());
-                    }
-                    
-                    List<BeaconResultset> list = resultsets.getResultSets();
-                    if (list == null) {
-                        resultsets.setResultSets(list = new ArrayList());
-                    }
+                        List<BeaconResultset> list = resultsets.getResultSets();
+                        if (list == null) {
+                            resultsets.setResultSets(list = new ArrayList());
+                        }
 
-                    list.add(empty);
+                        list.add(empty);
+                    }
                 }
             }
             aggregated = response;
@@ -327,17 +331,19 @@ public class BeaconNetworkResponseBuilder {
             return false;
         }
         
+        final boolean hit = "HIT".equals(include_resultset_responses);
+        
         final BeaconResponseSummary response_summary = response.getResponseSummary();
         if (response_summary != null) {
             if (Boolean.TRUE.equals(response_summary.getExists())) {
-                return true;
+                return hit;
             }
             final Integer num_total_results = response_summary.getNumTotalResults();
             if (num_total_results != null && num_total_results > 0) {
-                return true;
+                return hit;
             }
         }
         
-        return false;
+        return !hit;
     }
 }
