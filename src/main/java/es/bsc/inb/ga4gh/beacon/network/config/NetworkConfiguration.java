@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -73,8 +73,7 @@ import java.util.logging.Logger;
 @Singleton
 public class NetworkConfiguration {
 
-    public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
-    public final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
+    // public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
 
     @Inject
     private Event<NetworkConfigUpdatedEvent> config_updated_event;

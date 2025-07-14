@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -172,14 +172,7 @@ public class EndpointsDefinitions {
                         rootURI = endpointRoot.resolve(rootURI);
                     }
                     
-                    final String root = rootURI.toString();
-                    final int lastIdx = root.endsWith("/") ? root.length() - 1 : root.length();
-                    final int lastPathIdx = root.lastIndexOf('/', lastIdx);
-                    if (lastPathIdx > 0) {
-                        final String baseURI = root.substring(0, lastPathIdx);
-                        endpointRoot = URI.create(baseURI);
-                        urls.put(entryType, baseURI + "/" + root.substring(lastPathIdx, lastIdx));
-                    }
+                    urls.put(entryType, rootURI.toString());
                 } catch (Exception ex) {
                     Logger.getLogger(EndpointsDefinitions.class.getName()).log(Level.WARNING, null, ex);
                 }
@@ -241,8 +234,7 @@ public class EndpointsDefinitions {
                 // resolve relative url
                 uri = endpointRoot.resolve(url);
             }
-            uri = endpointRoot.relativize(uri);
-            urls.put(endpointType, endpointRoot + "//" + URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8));
+            urls.put(endpointType, URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8));
         } catch (Exception ex) {
             Logger.getLogger(EndpointsDefinitions.class.getName()).log(Level.WARNING, null, ex);
         }

@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -24,9 +24,8 @@
  */
 
 package es.bsc.inb.ga4gh.beacon.network.config;
-
-import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_DIR;
-import static es.bsc.inb.ga4gh.beacon.network.config.NetworkConfiguration.BEACON_NETWORK_CONFIG_FILE;
+import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_DIR;
+import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_FILE;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;

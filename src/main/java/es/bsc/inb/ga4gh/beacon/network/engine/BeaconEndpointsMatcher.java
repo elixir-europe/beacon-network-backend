@@ -1,3 +1,28 @@
+/**
+ * *****************************************************************************
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * and Barcelona Supercomputing Center (BSC)
+ *
+ * Modifications to the initial code base are copyright of their respective
+ * authors, or their employers as appropriate.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ * *****************************************************************************
+ */
+
 package es.bsc.inb.ga4gh.beacon.network.engine;
 
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.configuration.BeaconMap;
@@ -34,8 +59,6 @@ public class BeaconEndpointsMatcher {
         if (endpointTypes.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
-
-        final String path = request.getPathInfo();
         
         final Map<String, Map.Entry<String, String>> matched_endpoints = new HashMap();
 
@@ -43,8 +66,7 @@ public class BeaconEndpointsMatcher {
         for (Map.Entry<String, Map<String, String>> entry : all_endpoints.entrySet()) {
             final Map<String, String> urls = entry.getValue();
             for (Map.Entry<String, String> urlEntry : urls.entrySet()) {
-                if (endpointTypes.contains(urlEntry.getKey()) && 
-                        match(path, urlEntry.getValue())) {
+                if (endpointTypes.contains(urlEntry.getKey())) {
                     matched_endpoints.put(entry.getKey(), urlEntry);
                 }
             }

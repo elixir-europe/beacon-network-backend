@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -199,9 +199,7 @@ public class BeaconNetworkAggregator {
     }
 
     private Builder getInvocation(String endpoint, HttpServletRequest request) {
-        endpoint = endpoint.substring(0, endpoint.lastIndexOf("//"));
         Builder builder = HttpRequest.newBuilder(UriBuilder.fromUri(endpoint)
-                .path(request.getPathInfo())
                 .replaceQuery(request.getQueryString()).build())
                 .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)

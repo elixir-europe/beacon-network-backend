@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -62,8 +62,8 @@ public class BeaconNetworkRequestAnalyzer {
                     new ByteArrayInputStream(content), StandardCharsets.UTF_8), 
                     BeaconRequestBody.class);
         } catch (Exception ex) {
-                        Logger.getLogger(BeaconNetworkRequestAnalyzer.class.getName())
-                                .log(Level.INFO, "error parsing request", ex);
+                Logger.getLogger(BeaconNetworkRequestAnalyzer.class.getName())
+                        .log(Level.INFO, "error parsing request", ex);
         }
 
         return null;
@@ -76,7 +76,9 @@ public class BeaconNetworkRequestAnalyzer {
      * @return 
      */
     public BeaconRequestQuery getRequestQuery(HttpServletRequest request) {
-        BeaconRequestQuery query = new BeaconRequestQuery();
+        final BeaconRequestQuery query = new BeaconRequestQuery();
+        
+        query.setIncludeResultsetResponses("ALL");
         
         final String skip = request.getParameter("skip");
         final String limit = request.getParameter("limit");

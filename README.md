@@ -79,6 +79,54 @@ There are several timeouts that may be configured via environment variables:
 Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
 If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
 
+#### Beacon Network Endpoints pre-configuration
+
+By default, Beacon Network defines the endpoints basing on the endpoints found in the backed beacons (specified in the `/map` endpoint).
+Sometimes this could be inconvenient, so there is a way to provide default, preferred endpoint names. Deployers may provide a custom `BEACON_NETWORK_CONFIG_DIR/beacon-network-map.json` template file
+(along with `beacon-network.json` file) to trick the generated endpoints:
+
+```json
+{
+  "response": {
+    "endpointSets": {
+      "individual": {
+        "entryType": "individual",
+        "rootUrl": "/individuals2"
+      }
+    }
+  }
+}
+```
+
+This is a template file (in the format of the Beacon's `/map` schema), where it is possible to remap entire scopes of just a particular endpoint within a scope. 
+Here above, all 'individual' endpoints will be redefined:
+
+```json
+"individual": {
+  "endpoints": {
+    "genomicVariant": {
+      "returnedEntryType": "genomicVariant",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/g_variants"
+    },
+    "run": {
+      "returnedEntryType": "run",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/runs"
+    },
+    "biosample": {
+      "returnedEntryType": "biosample",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/biosamples"
+    },
+    "analysis": {
+      "returnedEntryType": "analysis",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/analyses"
+    }
+  },
+  "entryType": "individual",
+  "rootUrl": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2",
+  "singleEntryUrl": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}"
+}
+```
+
 ### SQL Database
 
 The Beacon Network Aggregator uses [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) for logging.
