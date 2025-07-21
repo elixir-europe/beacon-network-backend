@@ -26,7 +26,6 @@
 package es.bsc.inb.ga4gh.beacon.network.config;
 
 import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_DIR;
-import es.bsc.inb.ga4gh.beacon.network.info.BeaconInfoProducer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.bind.JsonbBuilder;
@@ -60,7 +59,7 @@ public class BeaconNetworkConfiguration {
                         bean = JsonbBuilder.create().fromJson(in, clazz);
                     } catch (NoSuchFileException ex) {
                     } catch (Exception ex) {
-                                Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.WARNING, null, ex);
+                        Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
             }
@@ -72,7 +71,7 @@ public class BeaconNetworkConfiguration {
                     try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + file)) {
                         if (in == null) {
                             Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(
-                                    Level.SEVERE, "no file found: %s", BEACON_NETWORK_CONFIG_DIR + file);
+                                    Level.INFO, "no file found: {0}", BEACON_NETWORK_CONFIG_DIR + file);
                         } else {
                             bean = JsonbBuilder.create().fromJson(in, clazz);
                         }
