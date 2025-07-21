@@ -13,7 +13,6 @@ FROM quay.io/wildfly/wildfly:36.0.1.Final-jdk17
 
 # add PostgreSQL java driver and latest Yasson snapshot
 COPY ./docker/wildfly/modules/postgresql $JBOSS_HOME/modules/system/layers/base/org/postgresql/
-COPY ./docker/wildfly/modules/yasson $JBOSS_HOME/modules/system/layers/base/org/eclipse/yasson/
 
 RUN /bin/sh -c 'echo -e "embed-server --std-out=echo\n \
 /subsystem=undertow/server=default-server/ajp-listener=ajp:add(socket-binding=ajp, scheme=https, redirect-socket=https, enabled=true)\n \
