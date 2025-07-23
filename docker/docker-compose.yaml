@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   beacon-network:
 
@@ -14,7 +12,7 @@ x-environment: &env
   - JBOSS_JAVA_SIZING=-XX:+UseContainerSupport -XX:MaxRAMPercentage=70.0 -Xms128m
 services:
   postgres:
-    image: postgres:16.0-alpine
+    image: postgres:17.5-alpine
     restart: always
     environment: *env
     volumes:
@@ -23,7 +21,7 @@ services:
     networks:
       - beacon-network
   wildfly:
-    image: ghcr.io/elixir-europe/beacon-network-backend:latest
+    image: ghcr.io/elixir-europe/beacon-network-backend-oidc:latest
     container_name: "wildfly-beacon-network"
     depends_on:
       - postgres

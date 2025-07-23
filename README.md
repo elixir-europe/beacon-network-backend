@@ -1,7 +1,7 @@
 # beacon-network-backend
 
 ###### Jakarta EE Platform 10
-The implementation is developed and deployed on the [WildFly 30.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
+The implementation is developed and deployed on the [WildFly 36.0.1](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
 
 ###### Beacon v2 Java implementation
 The implementation uses [Beacon v2 Java beacon-framework](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
@@ -32,9 +32,7 @@ This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive)
 
 #### WilfFly server
 WildFly is a free opensource JEE server and may be easy downloaded from it's website: http://wildfly.org/.  
-Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.  
-
-The implementation relies on JSON-B 3.0 [Eclipse Yasson<sup>TM</sup>](https://github.com/eclipse-ee4j/yasson) implementation, but requires yet **unreleased 3.0.4** version [yasson-3.0.4-SNAPSHOT.jar](https://jakarta.oss.sonatype.org/content/repositories/snapshots/org/eclipse/yasson/3.0.4-SNAPSHOT/). Once WildFly is updated to the 3.0.4 version of Yasson<sup>TM</sup> this step would be unneccessary.
+Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.
 
 The Beacon Network logging is implemented using [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) and relies on [PostgreSQL](https://www.postgresql.org/) database.
 The server must be pre-configured for the PostgreSQL and the PosgreSQL JDBC driver must be intalled into the WildFly (docker image recipe does this job).
@@ -51,8 +49,8 @@ cp target/beacon-network-v2-x.x.x.war $WILDFLY_HOME/standalone/deployments/
 ## Configuration
 
 There are three default configuration files in the `/BEACON-INF` directory:
-* `configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
-* `beacon-info.json` - standard beacon information file: [beaconInfoResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconInfoResponse.json)
+* `beacon-network-configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
+* `beacon-network-info.json` - standard beacon information file: [beaconInfoResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconInfoResponse.json)
 * `beacon-network.json` - Json Array of backed Beacons' endpoints  
 
 The example of the `beacon-network.json`:
@@ -69,7 +67,7 @@ It is also possible to define external directory for the configuration.
 export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 ```
 When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
-It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-info.json` so deployers may change the beacon identifier and other metatada.
+It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-network-configuration.json` and `$BEACON_NETWORK_CONFIG_DIR/beacon-network-info.json` so deployers may change the beacon identifier and other metatada.
 
 There are several timeouts that may be configured via environment variables:
 - `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
