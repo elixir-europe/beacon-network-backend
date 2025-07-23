@@ -32,9 +32,7 @@ This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive)
 
 #### WilfFly server
 WildFly is a free opensource JEE server and may be easy downloaded from it's website: http://wildfly.org/.  
-Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.  
-
-The implementation relies on JSON-B 3.0 [Eclipse Yasson<sup>TM</sup>](https://github.com/eclipse-ee4j/yasson) implementation, but requires yet **unreleased 3.0.4** version [yasson-3.0.4-SNAPSHOT.jar](https://jakarta.oss.sonatype.org/content/repositories/snapshots/org/eclipse/yasson/3.0.4-SNAPSHOT/). Once WildFly is updated to the 3.0.4 version of Yasson<sup>TM</sup> this step would be unneccessary.
+Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.
 
 The Beacon Network logging is implemented using [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) and relies on [PostgreSQL](https://www.postgresql.org/) database.
 The server must be pre-configured for the PostgreSQL and the PosgreSQL JDBC driver must be intalled into the WildFly (docker image recipe does this job).
