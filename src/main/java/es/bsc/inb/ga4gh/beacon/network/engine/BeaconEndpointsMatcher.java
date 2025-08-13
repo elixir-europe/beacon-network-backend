@@ -53,9 +53,9 @@ public class BeaconEndpointsMatcher {
     
     public Map<String, Map.Entry<String, String>> match(HttpServletRequest request) {
 
-        final StringBuffer url = request.getRequestURL();
+        final String url = request.getRequestURL().toString();
 
-        final Set<String> endpointTypes = getEndpointTypes(url.toString());
+        final Set<String> endpointTypes = getEndpointTypes(url);
         if (endpointTypes.isEmpty()) {
             return Collections.EMPTY_MAP;
         }

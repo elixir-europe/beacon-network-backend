@@ -187,7 +187,7 @@ public class BeaconMapsProducer {
             }
 
             if (aggregated_endpoint.getRootUrl() == null) {
-                final String root_url = relativize(URI.create(root), proxy_endpoint.getRootUrl());
+                final String root_url = relativize(proxy_base_uri, proxy_endpoint.getRootUrl());
                 aggregated_endpoint.setRootUrl(root + root_url);
             }
             

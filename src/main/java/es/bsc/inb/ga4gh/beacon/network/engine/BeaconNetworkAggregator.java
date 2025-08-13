@@ -199,8 +199,17 @@ public class BeaconNetworkAggregator {
     }
 
     private Builder getInvocation(String endpoint, HttpServletRequest request) {
-        Builder builder = HttpRequest.newBuilder(UriBuilder.fromUri(endpoint)
-                .replaceQuery(request.getQueryString()).build())
+        
+        final String[] src = request.getPathInfo().split("/");
+        final StringBuilder path = new StringBuilder(endpoint);
+        for (int i = src.length - 1, idx1, idx2 = path.length(); i > 0 && idx2 >= 0; idx2 = idx1, i--) {
+            idx1 = path.lastIndexOf("/", idx2 - 1);
+            if (path.charAt(idx1 + 1) == '{' && path.charAt(idx2 - 1) == '}') {
+                path.replace(idx1 + 1, idx2, src[i]);
+            }
+        }
+        
+        Builder builder = HttpRequest.newBuilder(UriBuilder.fromUri(path.toString())                .replaceQuery(request.getQueryString()).build())
                 .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
