@@ -73,8 +73,6 @@ import java.util.logging.Logger;
 @Singleton
 public class NetworkConfiguration {
 
-    // public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
-
     @Inject
     private Event<NetworkConfigUpdatedEvent> config_updated_event;
 

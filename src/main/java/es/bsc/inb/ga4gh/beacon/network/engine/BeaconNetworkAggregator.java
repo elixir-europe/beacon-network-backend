@@ -140,7 +140,7 @@ public class BeaconNetworkAggregator {
                     xid, entry.getKey(), endpoint.getKey(), endpoint.getValue(), 
                     query != null ? query.getTestMode() : null, data, schema);
 
-            final Builder builder = getInvocation(endpoint.getValue(), request);
+            final Builder builder = getInvocation(entry.getKey(), endpoint.getValue(), request);
             builder.method(request.getMethod(), processor);
             final HttpRequest req = builder.build();
 
@@ -198,7 +198,7 @@ public class BeaconNetworkAggregator {
         return responses;
     }
 
-    private Builder getInvocation(String endpoint, HttpServletRequest request) {
+    private Builder getInvocation(String beaconId, String endpoint, HttpServletRequest request) {
         
         final String[] src = request.getPathInfo().split("/");
         final StringBuilder path = new StringBuilder(endpoint);
@@ -216,7 +216,7 @@ public class BeaconNetworkAggregator {
         
         final Enumeration<String> authorization = request.getHeaders(HttpHeaders.AUTHORIZATION);
         if (authorization != null && authorization.hasMoreElements()) {
-            tokenExchanger.exchange(endpoint, Collections.list(authorization)).stream()
+            tokenExchanger.exchange(beaconId, Collections.list(authorization)).stream()
                     .forEach(h -> builder.header(HttpHeaders.AUTHORIZATION, h));
         }
 

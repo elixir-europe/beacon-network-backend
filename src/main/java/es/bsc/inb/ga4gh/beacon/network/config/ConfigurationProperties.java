@@ -33,6 +33,10 @@ public final class ConfigurationProperties {
     
     public final static String BN_CONFIG_DIR_PROPERTY_NAME = "BEACON_NETWORK_CONFIG_DIR";
     
+    public final static String BN_OIDC_ENDPOINT_PROPERTY_NAME = "BEACON_NETWORK_OIDC_ENDPOINT";
+    public final static String BN_CLIENT_ID_PROPERTY_NAME = "BEACON_NETWORK_CLIENT_ID";
+    public final static String BN_CLIENT_SECRET_PROPERTY_NAME = "BEACON_NETWORK_CLIENT_SECRET";
+    
     public final static String BN_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REQUEST_TIMEOUT";
     public final static String BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT";
     public final static String BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REFRESH_METADATA_TIMEOUT";
@@ -49,7 +53,15 @@ public final class ConfigurationProperties {
     public final static long BN_REQUEST_TIMEOUT_PROPERTY;
     public final static long BN_REFRESH_METADATA_TIMEOUT_PROPERTY;
     
+    public final static String BN_OIDC_ENDPOINT;
+    public final static String BN_CLIENT_ID;
+    public final static String BN_CLIENT_SECRET;
+    
     static {
+        BN_OIDC_ENDPOINT = System.getenv(BN_OIDC_ENDPOINT_PROPERTY_NAME);
+        BN_CLIENT_ID = System.getenv(BN_CLIENT_ID_PROPERTY_NAME);
+        BN_CLIENT_SECRET = System.getenv(BN_CLIENT_SECRET_PROPERTY_NAME);
+        
         BN_CONFIG_DIR_PROPERTY = System.getenv(BN_CONFIG_DIR_PROPERTY_NAME);
         BN_DISCARD_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME, 5);
         BN_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_REQUEST_TIMEOUT_PROPERTY_NAME, 600);

@@ -26,7 +26,6 @@
 package es.bsc.inb.ga4gh.beacon.network.config;
 
 import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_DIR;
-import es.bsc.inb.ga4gh.beacon.network.info.BeaconInfoProducer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.bind.JsonbBuilder;
