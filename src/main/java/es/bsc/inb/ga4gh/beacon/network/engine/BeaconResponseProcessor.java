@@ -173,8 +173,8 @@ public class BeaconResponseProcessor implements BodyPublisher,
                 final JsonValue v = reader.readValue();
                 schema.validate(v, errors);
             } catch(Exception ex) {
-                final String msg = String.format("%s error parsing %s from %s", 
-                                beaconId, entityType, template);
+                final String msg = String.format("%s error parsing %s from %s:\n%s", 
+                                beaconId, entityType, template, ex.getMessage());
                 errors.add(new ValidationError(msg));
             }
             return errors;
