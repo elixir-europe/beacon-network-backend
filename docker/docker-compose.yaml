@@ -21,7 +21,7 @@ services:
     networks:
       - beacon-network
   wildfly:
-    image: ghcr.io/elixir-europe/beacon-network-backend-snapshot:latest
+    image: ghcr.io/elixir-europe/beacon-network-backend:latest
     container_name: "wildfly-beacon-network"
     depends_on:
       - postgres

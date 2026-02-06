@@ -11,7 +11,7 @@ RUN mvn clean install -DskipTests --no-transfer-progress
 # Beacon Network 2.0 image
 FROM quay.io/wildfly/wildfly:39.0.0.Final-jdk17
 
-# add PostgreSQL java driver and latest Yasson snapshot
+# add PostgreSQL java driver
 COPY ./docker/wildfly/modules/postgresql $JBOSS_HOME/modules/system/layers/base/org/postgresql/
 
 RUN /bin/sh -c 'echo -e "embed-server --std-out=echo\n \
