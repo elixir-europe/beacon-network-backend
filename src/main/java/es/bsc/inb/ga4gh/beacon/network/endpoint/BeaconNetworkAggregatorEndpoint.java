@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -25,7 +25,6 @@
 
 package es.bsc.inb.ga4gh.beacon.network.endpoint;
 
-import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.BeaconFilteringTermsResponse;
 import es.bsc.inb.ga4gh.beacon.network.engine.BeaconNetworkAggregator;
 import es.bsc.inb.ga4gh.beacon.network.info.BeaconFilteringTermsProducer;
 import jakarta.annotation.Resource;
@@ -65,14 +64,6 @@ public class BeaconNetworkAggregatorEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public void get(@Context HttpServletRequest request,
             @Suspended AsyncResponse asyncResponse) {
-        
-        // the PATH for the filtering terms endpoints may clash
-        // just check whether we are asking for the filtering ters before proxying the query
-        final BeaconFilteringTermsResponse response = filtering_terms.filteringTerms();
-        if (response != null) {
-            asyncResponse.resume(response);
-        }
-        
         executor.submit(() -> {
             asyncResponse.resume(asyncEndpoint(request));
         });
@@ -83,9 +74,9 @@ public class BeaconNetworkAggregatorEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public void post(@Context HttpServletRequest request,
             @Suspended AsyncResponse asyncResponse) {
-            executor.submit(() -> {
-                asyncResponse.resume(asyncEndpoint(request));
-            });
+        executor.submit(() -> {
+            asyncResponse.resume(asyncEndpoint(request));
+        });
 
     }
     

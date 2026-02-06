@@ -1,7 +1,7 @@
 # beacon-network-backend
 
 ###### Jakarta EE Platform 10
-The implementation is developed and deployed on the [WildFly 30.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
+The implementation is developed and deployed on the [WildFly 39.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.1 API ([JAX-RS 3.1](https://jakarta.ee/specifications/restful-ws/3.1/)).
 
 ###### Beacon v2 Java implementation
 The implementation uses [Beacon v2 Java beacon-framework](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
@@ -28,13 +28,11 @@ git clone https://github.com/elixir-europe/beacon-network-backend.git
 cd beacon-network-backend
 mvn install
 ```
-This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.9/beacon-network-v2-0.0.9.war).
+This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.13/beacon-network-v2-0.0.13.war).
 
 #### WilfFly server
 WildFly is a free opensource JEE server and may be easy downloaded from it's website: http://wildfly.org/.  
-Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.  
-
-The implementation relies on JSON-B 3.0 [Eclipse Yasson<sup>TM</sup>](https://github.com/eclipse-ee4j/yasson) implementation, but requires yet **unreleased 3.0.4** version [yasson-3.0.4-SNAPSHOT.jar](https://jakarta.oss.sonatype.org/content/repositories/snapshots/org/eclipse/yasson/3.0.4-SNAPSHOT/). Once WildFly is updated to the 3.0.4 version of Yasson<sup>TM</sup> this step would be unneccessary.
+Nevertheless, the sever requires some configuration which in a case of docker image is done by the [Dcokerfile](https://github.com/elixir-europe/beacon-network-backend/blob/2d42fa703742de713c238a3c2e2e3e5bc6e2c4c7/docker/Dockerfile#L15) recipe.
 
 The Beacon Network logging is implemented using [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) and relies on [PostgreSQL](https://www.postgresql.org/) database.
 The server must be pre-configured for the PostgreSQL and the PosgreSQL JDBC driver must be intalled into the WildFly (docker image recipe does this job).
@@ -51,8 +49,8 @@ cp target/beacon-network-v2-x.x.x.war $WILDFLY_HOME/standalone/deployments/
 ## Configuration
 
 There are three default configuration files in the `/BEACON-INF` directory:
-* `configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
-* `beacon-info.json` - standard beacon information file: [beaconInfoResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconInfoResponse.json)
+* `beacon-network-configuration.json` - standard beacon configuration file: [beaconConfigurationResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconConfigurationResponse.json)
+* `beacon-network-info.json` - standard beacon information file: [beaconInfoResponse.json](https://github.com/ga4gh-beacon/beacon-v2/blob/main/framework/json/responses/beaconInfoResponse.json)
 * `beacon-network.json` - Json Array of backed Beacons' endpoints  
 
 The example of the `beacon-network.json`:
@@ -69,7 +67,7 @@ It is also possible to define external directory for the configuration.
 export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 ```
 When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
-It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-info.json` so deployers may change the beacon identifier and other metatada.
+It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-network-configuration.json` and `$BEACON_NETWORK_CONFIG_DIR/beacon-network-info.json` so deployers may change the beacon identifier and other metatada.
 
 There are several timeouts that may be configured via environment variables:
 - `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
@@ -78,6 +76,54 @@ There are several timeouts that may be configured via environment variables:
 
 Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
 If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
+
+#### Beacon Network Endpoints pre-configuration
+
+By default, Beacon Network defines the endpoints basing on the endpoints found in the backed beacons (specified in the `/map` endpoint).
+Sometimes this could be inconvenient, so there is a way to provide default, preferred endpoint names. Deployers may provide a custom `BEACON_NETWORK_CONFIG_DIR/beacon-network-map.json` template file
+(along with `beacon-network.json` file) to trick the generated endpoints:
+
+```json
+{
+  "response": {
+    "endpointSets": {
+      "individual": {
+        "entryType": "individual",
+        "rootUrl": "/individuals2"
+      }
+    }
+  }
+}
+```
+
+This is a template file (in the format of the Beacon's `/map` schema), where it is possible to remap entire scopes of just a particular endpoint within a scope. 
+Here above, all 'individual' endpoints will be redefined:
+
+```json
+"individual": {
+  "endpoints": {
+    "genomicVariant": {
+      "returnedEntryType": "genomicVariant",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/g_variants"
+    },
+    "run": {
+      "returnedEntryType": "run",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/runs"
+    },
+    "biosample": {
+      "returnedEntryType": "biosample",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/biosamples"
+    },
+    "analysis": {
+      "returnedEntryType": "analysis",
+      "url": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}/analyses"
+    }
+  },
+  "entryType": "individual",
+  "rootUrl": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2",
+  "singleEntryUrl": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}"
+}
+```
 
 ### SQL Database
 

@@ -76,7 +76,9 @@ public class BeaconNetworkRequestAnalyzer {
      * @return 
      */
     public BeaconRequestQuery getRequestQuery(HttpServletRequest request) {
-        BeaconRequestQuery query = new BeaconRequestQuery();
+        final BeaconRequestQuery query = new BeaconRequestQuery();
+        
+        query.setIncludeResultsetResponses("ALL");
         
         final String skip = request.getParameter("skip");
         final String limit = request.getParameter("limit");
