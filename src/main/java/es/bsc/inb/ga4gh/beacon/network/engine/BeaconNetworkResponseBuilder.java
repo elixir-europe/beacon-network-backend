@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -26,7 +26,7 @@
 package es.bsc.inb.ga4gh.beacon.network.engine;
 
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.common.SchemaPerEntity;
-import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconQueryFilter;
+import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconQueryFilterGroupInterface;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestMeta;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestQuery;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.responses.AbstractBeaconResponse;
@@ -276,11 +276,11 @@ public class BeaconNetworkResponseBuilder {
             request_summary.setPagination(request_query.getPagination());
             request_summary.setBeaconRequestParameters(request_query.getRequestParameters());
 
-            final List<BeaconQueryFilter> filters = request_query.getFilters();
+            final List<BeaconQueryFilterGroupInterface> filters = request_query.getFilters();
             if (filters != null) {
                 request_summary.setFilters(filters.stream()
                         .filter(Objects::nonNull)
-                        .map(BeaconQueryFilter::toString)
+                        .map(BeaconQueryFilterGroupInterface::toString)
                         .collect(Collectors.toList()));
             }
 

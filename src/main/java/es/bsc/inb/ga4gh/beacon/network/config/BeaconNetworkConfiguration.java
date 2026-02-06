@@ -71,7 +71,7 @@ public class BeaconNetworkConfiguration {
                     try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + file)) {
                         if (in == null) {
                             Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(
-                                    Level.SEVERE, "no file found: {0}", BEACON_NETWORK_CONFIG_DIR + file);
+                                    Level.INFO, "no file found: {0}", BEACON_NETWORK_CONFIG_DIR + file);
                         } else {
                             bean = JsonbBuilder.create().fromJson(in, clazz);
                         }

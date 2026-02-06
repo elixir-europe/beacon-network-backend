@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+  Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
   and Barcelona Supercomputing Center
 
   Modifications to the initial code base are copyright of their respective
@@ -72,7 +72,7 @@
         <dependency>        
             <groupId>es.bsc.inb.ga4gh</groupId>
             <artifactId>beacon-framework</artifactId>
-            <version>2.0.8</version>
+            <version>2.0.10</version>
         </dependency>
 
         <dependency>
