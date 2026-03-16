@@ -61,18 +61,34 @@ public class ServiceConfigurationProducer {
     private NetworkConfiguration network_configuration;
 
     private ServiceConfiguration configuration;
-    private BeaconConfiguration becon_configuration;
+    private BeaconConfiguration beacon_configuration;
 
     @PostConstruct
     public void init() {
-        configuration = cfg.loadConfiguration(BEACON_NETWORK_CONFIGURATION_FILE, ServiceConfiguration.class);
+        configuration = cfg.loadConfiguration(BEACON_NETWORK_CONFIGURATION_FILE, 
+                ServiceConfiguration.class);
+        
         if (configuration == null) {
             configuration = new ServiceConfiguration();
         }
-        becon_configuration = configuration.getResponse();
-        if (becon_configuration == null) {
-            configuration.setResponse(becon_configuration = new BeaconConfiguration());
+        beacon_configuration = configuration.getResponse();
+        if (beacon_configuration == null) {
+            configuration.setResponse(beacon_configuration = new BeaconConfiguration());
         }
+        
+        // safety check if overrdden configuration file have no "$schema" provided
+        if (beacon_configuration.getSchema() == null) {
+            final ServiceConfiguration def = 
+                    cfg.loadDefaultConfiguration(BEACON_NETWORK_CONFIGURATION_FILE, 
+                            ServiceConfiguration.class);
+            if (def != null) {
+                final BeaconConfiguration conf = def.getResponse();
+                if (conf != null) {
+                    beacon_configuration.setSchema(conf.getSchema());
+                }
+            }
+        }
+        
         configuration.setMeta(beacon_info.beaconInfo().getMeta());
     }
     
@@ -82,7 +98,7 @@ public class ServiceConfigurationProducer {
      * @param event update event
      */
     public void onEvent(@ObservesAsync NetworkConfigUpdatedEvent event) {
-        configuration.setResponse(aggregate(becon_configuration));
+        configuration.setResponse(aggregate(beacon_configuration));
     }
 
     /**
@@ -97,6 +113,9 @@ public class ServiceConfigurationProducer {
      */
     private BeaconConfiguration aggregate(BeaconConfiguration template) {
         final BeaconConfiguration aggregated = new BeaconConfiguration();
+        
+        aggregated.setSchema(template.getSchema());
+        
         aggregated.setEntryTypes(new HashMap());
         
         final Map<String,ServiceConfiguration> configurations = network_configuration.getConfigurations();

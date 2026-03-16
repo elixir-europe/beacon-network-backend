@@ -66,22 +66,23 @@ public class BeaconNetworkConfiguration {
         }
 
         if (bean == null) {
-            synchronized(BeaconNetworkConfiguration.class) {
-                if (bean == null) {
-                    try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + file)) {
-                        if (in == null) {
-                            Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(
-                                    Level.INFO, "no file found: {0}", BEACON_NETWORK_CONFIG_DIR + file);
-                        } else {
-                            bean = JsonbBuilder.create().fromJson(in, clazz);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
+            bean = loadDefaultConfiguration(file, clazz);
         }
         
         return bean;
+    }
+    
+    public <T> T loadDefaultConfiguration(String file, Class<T> clazz) {
+        try(InputStream in = ctx.getResourceAsStream(BEACON_NETWORK_CONFIG_DIR + file)) {
+            if (in == null) {
+                Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(
+                        Level.INFO, "no file found: {0}", BEACON_NETWORK_CONFIG_DIR + file);
+            } else {
+                return JsonbBuilder.create().fromJson(in, clazz);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

@@ -1,0 +1,31 @@
+{
+  "response": {
+    "$schema": "https://raw.githubusercontent.com/ga4gh-beacon/beacon-framework-v2/main/configuration/beaconMapSchema.json",
+    "endpointSets": {
+      "individual": {
+        "entryType": "individual",
+        "rootUrl": "/individuals"
+      },
+      "biosample": {
+        "entryType": "biosample",
+        "rootUrl": "/biosamples"
+      },
+      "genomicVariant": {
+        "entryType": "genomicVariant",
+        "rootUrl": "/g_variants"
+      },
+      "run": {
+        "entryType": "run",
+        "rootUrl": "/runs"
+      },
+      "dataset": {
+        "entryType": "dataset",
+        "rootUrl": "/datasets"
+      },
+      "cohort": {
+        "entryType": "cohort",
+        "rootUrl": "/cohorts"
+      }
+    }
+  }
+}

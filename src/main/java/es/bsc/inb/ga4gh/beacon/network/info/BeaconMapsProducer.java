@@ -74,6 +74,28 @@ public class BeaconMapsProducer {
     public void init() {
         default_map_config = cfg.loadConfiguration(ConfigurationProperties.BEACON_NETWORK_MAP_FILE, 
                 BeaconMapResponse.class);
+        
+        if (default_map_config == null) {
+            default_map_config = new BeaconMapResponse();
+        }
+        
+        BeaconMap beacon_map = default_map_config.getResponse();
+        if (beacon_map == null) {
+            default_map_config.setResponse(beacon_map = new BeaconMap());
+        }
+        
+        // safety check if overrdden map file have no "$schema" provided
+        if (beacon_map.getSchema() == null) {
+            final BeaconMapResponse def = 
+                    cfg.loadDefaultConfiguration(ConfigurationProperties.BEACON_NETWORK_MAP_FILE, 
+                            BeaconMapResponse.class);
+            if (def != null) {
+                final BeaconMap map = def.getResponse();
+                if (map != null) {
+                    beacon_map.setSchema(map.getSchema());
+                }
+            }
+        }
     }
     
     public void onEvent(@ObservesAsync NetworkConfigUpdatedEvent event) {
@@ -83,6 +105,9 @@ public class BeaconMapsProducer {
 
     private BeaconMap generate() {
         final BeaconMap aggregated_map = new BeaconMap();
+        
+        aggregated_map.setSchema(default_map_config.getResponse().getSchema());
+        
         final Map<String, Endpoint> aggregated_endpoints = new HashMap();
         aggregated_map.setEndpointSets(aggregated_endpoints);
         
