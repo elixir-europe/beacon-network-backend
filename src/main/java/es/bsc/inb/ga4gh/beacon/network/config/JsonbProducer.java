@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -25,8 +25,8 @@
 
 package es.bsc.inb.ga4gh.beacon.network.config;
 
-import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconQueryFilter;
 import es.bsc.inb.ga4gh.beacon.network.model.jsonb.adapter.BeaconNetworkInfoResponseDeserializer;
+import es.bsc.inb.ga4gh.beacon.network.model.jsonb.adapter.BeaconQueryFilterDeserializer;
 import es.bsc.inb.ga4gh.beacon.network.model.jsonb.adapter.BeaconResponseDeserializer;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.inject.Produces;
@@ -50,7 +50,7 @@ public class JsonbProducer {
                 new JsonbConfig().withDeserializers(
                     new BeaconResponseDeserializer(),
                     new BeaconNetworkInfoResponseDeserializer(),
-                    new BeaconQueryFilter.BeaconQueryFilterDeserializer())).build();
+                    new BeaconQueryFilterDeserializer())).build();
     }
 
     @Produces
