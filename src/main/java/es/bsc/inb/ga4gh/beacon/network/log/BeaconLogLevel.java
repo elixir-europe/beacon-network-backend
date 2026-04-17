@@ -6,8 +6,9 @@ package es.bsc.inb.ga4gh.beacon.network.log;
 
 public enum BeaconLogLevel {
    
-    NONE, 
+    NONE, // no logging enabled
     METADATA, 
+    QUERIES,
     REQUESTS,
     RESPONSES,
     ALL;

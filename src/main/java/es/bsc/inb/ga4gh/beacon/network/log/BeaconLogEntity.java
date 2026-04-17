@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -193,6 +193,12 @@ public class BeaconLogEntity implements Serializable {
     }
     
     public static enum REQUEST_TYPE {
-        METADATA, QUERY;
+        METADATA, QUERY, REQUEST;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%s %s %s %s %s %s %s", getXid(),
+                    getType(), getMethod(), getUrl(), getCode(), getTime(), message == null ? "" : "'" + message + "'");
     }
 }
