@@ -69,6 +69,8 @@ export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
 It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-network-configuration.json` and `$BEACON_NETWORK_CONFIG_DIR/beacon-network-info.json` so deployers may change the beacon identifier and other metatada.
 
+It is possible to provide an environment variable `BEACON_NETWORK_LOG_FILE` for the log file.
+
 There are several timeouts that may be configured via environment variables:
 - `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
 - `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` - timeout in seconds (default 5 sec.) after which the response from a Beacon is discarded.
@@ -135,7 +137,8 @@ The application provides simple SQL logging which level may be confirured via `B
 The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES**", "**ALL**"
 - "**NONE**" : No logging at all.
 - "**METADATA**" : Only backed beacons' metadata is logged (good for debugging).
-- "**REQUESTS**" : Beacon Network Request quieries are logged. It also logs response codes (but not the data).
+- "**QUERIES**" : Beacon Network request quieries are logged.
+- "**REQUESTS**" : Beacon Request quieries are logged. It also logs response codes (but not the data).
 - "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
 - "**ALL**" : Maximum logging level. Currently same as "**RESPONSES**"
 
