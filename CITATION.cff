@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "Beacon Network v2 backend server"
+authors:
+  - family-names: Repchevsky
+    given-names: Dmitry
+    orcid: https://orcid.org/0000-0001-6415-0532
+    email: dmitry.repchevski@bsc.es
+version: 0.0.13
+repository: https://github.com/elixir-europe/beacon-network-backend
+preferred-citation:
+  type: software
+  title: "Beacon Network v2 backend server"
+  version: "0.0.13"
+  authors:
+    - family-names: "Repchevsky"
+      given-names: "Dmitry"
+  institution: "Barcelona Supercomputing Center (BSC)"
+  license: "LGPL-2.1-or-later"
+  repository-code: "https://github.com/elixir-europe/beacon-network-backend"
+  notes: "Beacon Network v2 backend server is a Jakarta RESTful Web Services 3.1 API based implementation of the Beacon Network v2 aggregation server"
