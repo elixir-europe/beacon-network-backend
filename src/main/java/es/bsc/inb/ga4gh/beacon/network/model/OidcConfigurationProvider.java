@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -26,9 +26,10 @@
 package es.bsc.inb.ga4gh.beacon.network.model;
 
 import jakarta.json.bind.annotation.JsonbProperty;
+import java.util.List;
 
 /**
- * Minimal model for the OpenID Provider Configuration Response object.
+ * Limited model for the OpenID Provider Configuration Response object.
  * 
  * @author Dmitry Repchevsky
  */
@@ -37,6 +38,8 @@ public class OidcConfigurationProvider {
     
     private String issuer;
     private String token_endpoint;
+    private List<String> scopes_supported;
+    private String registration_endpoint;
     
     public String getIssuer() {
         return issuer;
@@ -55,4 +58,25 @@ public class OidcConfigurationProvider {
     public void setTokenEndpoint(String token_endpoint) {
         this.token_endpoint = token_endpoint;
     }
+    
+    @JsonbProperty("scopes_supported")
+    public List<String> getSupportedScopes() {
+        return scopes_supported;
+    }
+    
+    @JsonbProperty("scopes_supported")
+    public void setSupportedScopes(List<String> scopes_supported) {
+        this.scopes_supported = scopes_supported;
+    }
+
+    @JsonbProperty("registration_endpoint")
+    public String getRegistrationEndpoint() {
+        return registration_endpoint;
+    }
+    
+    @JsonbProperty("registration_endpoint")
+    public void setRegistrationEndpoint(String registration_endpoint) {
+        this.registration_endpoint = registration_endpoint;
+    }
+
 }

@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2024 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -52,6 +52,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -90,13 +91,16 @@ public class BeaconNetworkTokenExchanger {
         
         configuration_providers = new ConcurrentHashMap();
         
-        idp = getBeaconNetworkIdentityProvider();
+        idp = limitScopes2Client(getBeaconNetworkIdentityProvider());
     }
     
     private OidcConfigurationProvider getBeaconNetworkIdentityProvider() {
         if (ConfigurationProperties.BN_OIDC_ENDPOINT == null ||
             ConfigurationProperties.BN_CLIENT_ID == null ||
             ConfigurationProperties.BN_CLIENT_SECRET == null) {
+            Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
+                    Level.INFO, "no Beacon Network server Identity Provider defined...");
+
             return null;
         }
         
@@ -119,6 +123,31 @@ public class BeaconNetworkTokenExchanger {
         return null;
     }
     
+    /**
+     * Instead of using the Identity Provider's supported scope list,
+     * try to user Beacon Network client's configured scopes.
+     * 
+     * @param idp Identity Provider configuration
+     * 
+     * @return the same, possibly modified, idp object
+     */
+    private OidcConfigurationProvider limitScopes2Client(OidcConfigurationProvider idp) {
+        if (idp != null) {
+            final String token = getIdentityProviderClientToken(idp.getTokenEndpoint());
+
+            if (token != null) {
+                final JsonObject payload = parse(token);
+                if (payload != null) {
+                    final String scope = payload.getString("scope", null);
+                    if (scope != null) {
+                        idp.setSupportedScopes(Arrays.asList(scope.split("\\s+")));
+                    }
+                }
+            }
+        }
+        return idp;
+    }
+    
     public List<String> exchange(String beaconId, List<String> headers) {
         return headers.stream().map(h -> exchangeHeader(beaconId, h)).toList();
     }
@@ -134,18 +163,10 @@ public class BeaconNetworkTokenExchanger {
     }
     
     private String exchangeToken(String beaconId, String token) {
-
-        final String[] token_parts = token.split("\\.");
-        if (token_parts.length == 3) {
-            final JsonObject payload = decode(token_parts[1]);
-            if (payload != null) {
-                return exchangeToken(beaconId, token, payload);
-            }
+        final JsonObject payload = parse(token);
+        if (payload == null) {
+            return null;
         }
-        return null;
-    }
-
-    private String exchangeToken(String beaconId, String token, JsonObject payload) {
         
         final String endpoint = network_configuration.getEndpoints().get(beaconId);
         final String issuer = payload.getString("iss", null);
@@ -153,7 +174,7 @@ public class BeaconNetworkTokenExchanger {
         if (idp != null) {
             // restrict audience to the beacon's endpoint
             final String tkn = doTokenExchange(idp, ConfigurationProperties.BN_CLIENT_ID,
-                    ConfigurationProperties.BN_CLIENT_SECRET, issuer, endpoint, token);
+                    ConfigurationProperties.BN_CLIENT_SECRET, issuer, endpoint, payload, token);
             if (tkn != null) {
                 token = tkn;
             }
@@ -181,7 +202,7 @@ public class BeaconNetworkTokenExchanger {
                     final List<OidcConfigurationProvider> providers = getWellKnownProviders(authorization_servers);
                     if (providers != null) {
                         for (OidcConfigurationProvider provider : providers) {
-                            return doTokenExchange(provider, client_id, null, issuer, null, token);
+                            return doTokenExchange(provider, client_id, null, issuer, null, payload, token);
                         }
                     }
                 }
@@ -233,11 +254,72 @@ public class BeaconNetworkTokenExchanger {
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
     }
 
-    private String doTokenExchange(OidcConfigurationProvider provider, String client_id, 
-            String client_secret, String subject_issuer, String endpoint, String token) {
+    private String getIdentityProviderClientToken(String endpoint) {
+        final StringBuilder data = new StringBuilder();
         
-        final Builder builder = createTokenExchangeRequest(provider, client_id, 
-                client_secret, subject_issuer, endpoint, token);
+        data.append("client_id").append('=').append(ConfigurationProperties.BN_CLIENT_ID);
+        if (ConfigurationProperties.BN_CLIENT_SECRET != null) {
+            data.append("&client_secret").append('=').append(ConfigurationProperties.BN_CLIENT_SECRET);
+        }
+        
+        data.append("&grant_type=client_credentials");
+        
+        return getAccessToken(endpoint, data.toString());
+    }
+    
+    private String doTokenExchange(OidcConfigurationProvider provider, String client_id, 
+            String client_secret, String subject_issuer, String endpoint, JsonObject payload, String token) {
+
+        final StringBuilder data = new StringBuilder();
+
+        data.append("client_id").append('=').append(client_id)
+            .append("&subject_token").append('=').append(token)
+            .append("&grant_type").append('=')
+                .append(URLEncoder.encode("urn:ietf:params:oauth:grant-type:token-exchange", StandardCharsets.UTF_8))
+            .append("&subject_token_type").append('=')
+                .append(URLEncoder.encode(
+                        Objects.equals(subject_issuer, provider.getIssuer())
+                        ? "urn:ietf:params:oauth:token-type:access_token"
+                        : "urn:ietf:params:oauth:token-type:jwt", StandardCharsets.UTF_8))
+            .append("&requested_token_type").append('=')
+                .append(URLEncoder.encode("urn:ietf:params:oauth:token-type:access_token", StandardCharsets.UTF_8));
+
+        // keep only scopes supported by the target client
+        final String scope = payload.getString("scope", "");
+        final List<String> scopes = new ArrayList(Arrays.asList(scope.split("\\s+")));
+        scopes.retainAll(idp.getSupportedScopes());
+        if (!scopes.isEmpty()) {
+            data.append("&scope=");
+            data.append(String.join(" ", scopes));
+        }
+        
+        if (client_secret != null) {
+            data.append("&client_secret").append('=').append(client_secret);
+        }
+
+        if (endpoint != null) {
+            data.append("&resource").append('=').append(endpoint);
+        }
+        
+        return getAccessToken(provider.getTokenEndpoint(), data.toString());
+    }
+    
+    /**
+     * Call the request and get back the access token.
+     * 
+     * @param endpoint the request endpoint
+     * @param data the request body
+     * 
+     * @return access token or null
+     */
+    private String getAccessToken(String endpoint, String data) {
+        
+        final Builder builder = HttpRequest.newBuilder(UriBuilder.fromUri(endpoint)
+                .build())
+                .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
+                .header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                .POST(BodyPublishers.ofString(data, StandardCharsets.UTF_8));
         
         try {
             final HttpResponse<String> response = http_client.send(builder.build(), 
@@ -251,51 +333,36 @@ public class BeaconNetworkTokenExchanger {
                     final String accessToken = atResponse.getAccessToken();
                     if (accessToken != null) {
                         return accessToken;
+                    } else {
+                        Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
+                                Level.WARNING, "no access token found in the client token response");
+
                     }
-                }                                            
+                } else {
+                        Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
+                                Level.WARNING, "empty client token response");                    
+                }                                           
+            } else {
+                Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
+                        Level.WARNING, "error getting client access token from {0}", endpoint);
+                Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
+                        Level.WARNING, response == null ? "no answer" : response.body());
             }
         } catch (Exception ex) {
             Logger.getLogger(BeaconNetworkTokenExchanger.class.getName()).log(
                     Level.INFO, ex.getMessage());
         }
+        return null;        
+    }
+    
+    private JsonObject parse(String token) {
+        final String[] token_parts = token.split("\\.");
+        if (token_parts.length == 3) {
+            return decode(token_parts[1]);
+        }
         return null;
     }
-    
-    private Builder createTokenExchangeRequest(OidcConfigurationProvider provider,
-            String client_id, String client_secret, String subject_issuer, String endpoint, String token) {
-        
-        final StringBuilder data = new StringBuilder();
 
-        data.append("client_id").append('=').append(client_id)
-            .append("&subject_token").append('=').append(token)
-            .append("&grant_type").append('=')
-                .append(URLEncoder.encode("urn:ietf:params:oauth:grant-type:token-exchange", StandardCharsets.UTF_8))
-            .append("&subject_token_type").append('=')
-                .append(URLEncoder.encode(
-                        Objects.equals(subject_issuer, provider.getIssuer())
-                        ? "urn:ietf:params:oauth:token-type:access_token"
-                        : "urn:ietf:params:oauth:token-type:jwt", StandardCharsets.UTF_8))
-            .append("&requested_token_type").append('=')
-                .append(URLEncoder.encode("urn:ietf:params:oauth:token-type:access_token", StandardCharsets.UTF_8))
-            .append("&scope=openid ga4gh_passport_v1");
-            
-        
-        if (client_secret != null) {
-            data.append("&client_secret").append('=').append(client_secret);
-        }
-
-        if (endpoint != null) {
-            data.append("&resource").append('=').append(endpoint);
-        }
-        
-        return HttpRequest.newBuilder(UriBuilder.fromUri(provider.getTokenEndpoint())
-                .build())
-                .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
-                .header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
-                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
-                .POST(BodyPublishers.ofString(data.toString(), StandardCharsets.UTF_8));
-    }
-    
     private JsonObject decode(String base64) {
         final Base64.Decoder decoder = Base64.getDecoder();
         try {
