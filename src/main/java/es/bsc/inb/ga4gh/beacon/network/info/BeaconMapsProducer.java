@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -78,16 +78,16 @@ public class BeaconMapsProducer {
         if (default_map_config == null) {
             default_map_config = new BeaconMapResponse();
         }
-        
+
         BeaconMap beacon_map = default_map_config.getResponse();
         if (beacon_map == null) {
             default_map_config.setResponse(beacon_map = new BeaconMap());
         }
-        
+
         // safety check if overrdden map file have no "$schema" provided
         if (beacon_map.getSchema() == null) {
-            final BeaconMapResponse def = 
-                    cfg.loadDefaultConfiguration(ConfigurationProperties.BEACON_NETWORK_MAP_FILE, 
+            final BeaconMapResponse def =
+                    cfg.loadDefaultConfiguration(ConfigurationProperties.BEACON_NETWORK_MAP_FILE,
                             BeaconMapResponse.class);
             if (def != null) {
                 final BeaconMap map = def.getResponse();
@@ -105,9 +105,9 @@ public class BeaconMapsProducer {
 
     private BeaconMap generate() {
         final BeaconMap aggregated_map = new BeaconMap();
-        
+           
         aggregated_map.setSchema(default_map_config.getResponse().getSchema());
-        
+    
         final Map<String, Endpoint> aggregated_endpoints = new HashMap();
         aggregated_map.setEndpointSets(aggregated_endpoints);
         
