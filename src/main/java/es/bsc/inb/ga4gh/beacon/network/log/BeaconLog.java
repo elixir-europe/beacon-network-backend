@@ -89,13 +89,13 @@ public class BeaconLog {
             if (tx.isActive()) {
                 try {
                     tx.rollback();
-                } catch (Exception e) {}
+                } catch(Exception e) {}
             }
         }
         return null;
     }
     
-    /**
+/**
      * Get last 'REQUEST' records from the log.
      * 
      * @param n the number of records to read
@@ -114,9 +114,11 @@ public class BeaconLog {
             tx.commit();
             return entries;
         } catch (Exception ex) {
-            try {
-                tx.rollback();
-            } catch (Exception e) {}
+            if (tx.isActive()) {
+                try {
+                    tx.rollback();
+                } catch (Exception e) {}
+            }
         }
         
         return getLastRecords(n);
@@ -136,7 +138,7 @@ public class BeaconLog {
         
         return Collections.EMPTY_LIST;
     }
-    
+
     public void log(BeaconLogEntity record) {
         log(record, BeaconLogLevel.LEVEL);
     }
