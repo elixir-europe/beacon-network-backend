@@ -40,10 +40,7 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Dmitry Repchevsky

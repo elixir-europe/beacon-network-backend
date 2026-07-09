@@ -73,11 +73,10 @@ public class BeaconNetworkAggregatorEndpoint {
     @Path("/{s:.+}")
     @Produces(MediaType.APPLICATION_JSON)
     public void post(@Context HttpServletRequest request,
-            @Suspended AsyncResponse asyncResponse) {
+        @Suspended AsyncResponse asyncResponse) {
         executor.submit(() -> {
             asyncResponse.resume(asyncEndpoint(request));
         });
-
     }
     
     private Response asyncEndpoint(HttpServletRequest request) {

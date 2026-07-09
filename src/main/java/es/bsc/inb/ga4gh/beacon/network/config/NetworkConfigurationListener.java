@@ -24,7 +24,6 @@
  */
 
 package es.bsc.inb.ga4gh.beacon.network.config;
-
 import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_DIR;
 import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BEACON_NETWORK_CONFIG_FILE;
 import jakarta.annotation.PostConstruct;
