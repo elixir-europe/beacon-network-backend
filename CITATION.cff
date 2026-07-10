@@ -6,12 +6,12 @@ authors:
     given-names: Dmitry
     orcid: https://orcid.org/0000-0001-6415-0532
     email: dmitry.repchevski@bsc.es
-version: 0.0.13
+version: 0.0.14
 repository: https://github.com/elixir-europe/beacon-network-backend
 preferred-citation:
   type: software
   title: "Beacon Network v2 backend server"
-  version: "0.0.13"
+  version: "0.0.14"
   authors:
     - family-names: "Repchevsky"
       given-names: "Dmitry"

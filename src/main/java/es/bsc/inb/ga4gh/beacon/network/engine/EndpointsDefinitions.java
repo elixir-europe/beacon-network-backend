@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2022 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2025 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -171,6 +171,7 @@ public class EndpointsDefinitions {
                     if (!rootURI.isAbsolute()) {
                         rootURI = endpointRoot.resolve(rootURI);
                     }
+                    
                     urls.put(entryType, rootURI.toString());
                 } catch (Exception ex) {
                     Logger.getLogger(EndpointsDefinitions.class.getName()).log(Level.WARNING, null, ex);

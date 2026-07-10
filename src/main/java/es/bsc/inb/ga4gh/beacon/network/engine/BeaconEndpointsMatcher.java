@@ -59,7 +59,7 @@ public class BeaconEndpointsMatcher {
         if (endpointTypes.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
-
+        
         final Map<String, Map.Entry<String, String>> matched_endpoints = new HashMap();
 
         final Map<String, Map<String, String>> all_endpoints = endpoints.getEndpoints();

@@ -46,7 +46,7 @@ import java.util.Map;
 
 @Singleton
 public class BeaconFilteringTermsProducer {
-    
+
     @Inject
     private ServiceConfigurationProducer configuration;
 
