@@ -1,7 +1,7 @@
 # beacon-network-backend
 
 ###### Jakarta EE Platform 10
-The implementation is developed and deployed on the [WildFly 39.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.1 API ([JAX-RS 310](https://jakarta.ee/specifications/restful-ws/3.1/)).
+The implementation is developed and deployed on the [WildFly 39.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.1 API ([JAX-RS 3.1](https://jakarta.ee/specifications/restful-ws/3.1/)).
 
 ###### Beacon v2 Java implementation
 The implementation uses [Beacon v2 Java beacon-framework](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
