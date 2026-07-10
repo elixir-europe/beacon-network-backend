@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>es.bsc.inb.ga4gh</groupId>
     <artifactId>beacon-network-v2</artifactId>
-    <version>0.0.14-SNAPSHOT</version>
+    <version>0.0.15-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <description>
@@ -57,10 +57,10 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        
+
         <jakarta.ee.version>10.0.0</jakarta.ee.version>
     </properties>
-    
+
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
@@ -69,7 +69,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>        
+        <dependency>
             <groupId>es.bsc.inb.ga4gh</groupId>
             <artifactId>beacon-framework</artifactId>
             <version>2.0.10</version>
