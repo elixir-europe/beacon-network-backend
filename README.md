@@ -1,7 +1,7 @@
 # beacon-network-backend
 
 ###### Jakarta EE Platform 10
-The implementation is developed and deployed on the [WildFly 30.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
+The implementation is developed and deployed on the [WildFly 39.0.0](http://wildfly.org/) server and is based on Jakarta RESTful Web Services 3.0 API ([JAX-RS 3.0](https://jakarta.ee/specifications/restful-ws/3.0/)).
 
 ###### Beacon v2 Java implementation
 The implementation uses [Beacon v2 Java beacon-framework](https://github.com/elixir-europe/java-beacon-v2.api) model classes.
@@ -126,6 +126,45 @@ Here above, all 'individual' endpoints will be redefined:
   "singleEntryUrl": "https://beacons.bsc.es/beacon-network/v2.0.0/individuals2/{id}"
 }
 ```
+### OpenID Connect security
+
+To improve security, the aggregator may use the Token Exchange ([RFC8693](https://datatracker.ietf.org/doc/html/rfc8693)) 
+mechanism in order to limit the scope of token propagation to the backing Beacons. In order to enable this functionality
+the proper environment variables must be provided:
+```
+BEACON_NETWORK_OIDC_ENDPOINT
+BEACON_NETWORK_CLIENT_ID
+BEACON_NETWORK_CLIENT_SECRET
+```
+If configured, for each Beacon participating in the Beacon Network the original Bearer token is exchanged with one issued by 
+the Beacon Network aggregator client.  
+
+The example of typical token exchange call:
+```bash
+curl -d "client_id=$CLIENT_ID" \
+-d "client_secret=$CLIENT_SECRET" \
+-d "subject_token=$ACCESS_TOKEN" \
+-d "scope=openid ga4gh_passport_v1 email" \
+-d "resource=https://beacons.bsc.es/beacon/v2.0.0" \
+--data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+--data-urlencode "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
+https://login.aai.lifescience-ri.eu/oidc/token
+```
+Note that with each token exchange Beacon Network passes the Beacon's API endpoint (as defined in the `beacon-network.json` file).
+Beacon Newtork aggregator's client may be configured to use this information to adjust the returned token accordingly 
+(e.g. using Resource Indicators ([RFC8707](https://datatracker.ietf.org/doc/html/rfc8707)).
+Special words about the scopes. Token Exchange shouldn't permit scope upscaling. Beacon Network aggregator only requests those scopes that 
+are found in the original access token. Moreover, it checks whether these scopes are supported by the client. This is done via requesting a 
+"client token" to the Beacon Network aggregator's client:
+```bash
+curl -H "Content-Type: application/x-www-form-urlencoded" 
+-d "grant_type=client_credentials" 
+-d "client_id=$CLIENT_ID" 
+-d 'client_secret=$CLIENT_SECRET' 
+"https://login.aai.lifescience-ri.eu/oidc/token"
+```
+and checking the scopes provided in this token. This means that the client should allow `client_credentials` grant types 
+(in addition to the `urn:ietf:params:oauth:grant-type:token-exchange`).
 
 ### SQL Database
 
