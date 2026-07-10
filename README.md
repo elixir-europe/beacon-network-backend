@@ -28,7 +28,7 @@ git clone https://github.com/elixir-europe/beacon-network-backend.git
 cd beacon-network-backend
 mvn install
 ```
-This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.9/beacon-network-v2-0.0.9.war).
+This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.14/beacon-network-v2-0.0.14.war).
 
 #### WilfFly server
 WildFly is a free opensource JEE server and may be easy downloaded from it's website: http://wildfly.org/.  
