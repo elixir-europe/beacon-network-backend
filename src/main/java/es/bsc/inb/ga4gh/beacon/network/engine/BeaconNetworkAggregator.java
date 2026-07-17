@@ -25,6 +25,7 @@
 
 package es.bsc.inb.ga4gh.beacon.network.engine;
 
+import es.bsc.inb.ga4gh.beacon.network.openid.BeaconNetworkTokenExchanger;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestBody;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestMeta;
 import es.bsc.inb.ga4gh.beacon.framework.model.v200.requests.BeaconRequestQuery;

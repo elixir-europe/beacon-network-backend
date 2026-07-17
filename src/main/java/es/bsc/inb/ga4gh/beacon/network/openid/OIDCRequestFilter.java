@@ -23,9 +23,9 @@
  *****************************************************************************
  */
 
-package es.bsc.inb.ga4gh.beacon.network.application;
+package es.bsc.inb.ga4gh.beacon.network.openid;
 
-import java.io.IOException;
+import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -34,8 +34,10 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponseWrapper;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  * @author Dmitry Repchevsky
@@ -46,31 +48,30 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
         asyncSupported = true,
         dispatcherTypes = {DispatcherType.REQUEST}
 )
-public class CorsResponseFilter implements Filter {
-
+public class OIDCRequestFilter implements Filter {
+    
+    private OidcTokenVerifier verifier;
+    
     @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) 
+            throws IOException, ServletException {
         
-        if (res instanceof HttpServletResponse) {
-            String origin = null;
-            if (req instanceof HttpServletRequest http_req) {
-                origin = http_req.getHeader("Origin");
-                if (origin == null) {
-                    origin = http_req.getHeader("Referer");
-                }
-            }
-            final HttpServletResponseWrapper wrapper = new HttpServletResponseWrapper((HttpServletResponse)res);
-            if (origin == null) {
-                origin = "*";
-            }
+        if (ConfigurationProperties.BN_TOKEN_ISSUER != null && 
+            ConfigurationProperties.BN_TOKEN_AUDIENCE != null &&
+            req instanceof HttpServletRequest request &&
+            request.getHeader(HttpHeaders.AUTHORIZATION) != null) {
+            if (verifier == null) {
+                final OidcProvider provider = new OidcProvider(ConfigurationProperties.BN_TOKEN_ISSUER);
+                
+                // this beacon network API uri
+                final String uri = UriBuilder.fromUri(URI.create(request.getRequestURL().toString()))
+                        .replacePath(request.getContextPath())
+                        .path(request.getServletPath()).build().toString();
 
-            wrapper.setHeader("Access-Control-Allow-Origin", origin);
-            wrapper.setHeader("Access-Control-Allow-Credentials", "true");
-            wrapper.setHeader("Access-Control-Request-Private-Network", "true");
-            wrapper.setHeader("Access-Control-Allow-Private-Network", "true");
-            wrapper.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, DELETE, PUT, PATCH, OPTIONS");
-            wrapper.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Authorization, Referer, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-            chain.doFilter(req, wrapper);
+                verifier = new OidcTokenVerifier(provider, uri);
+            }
+            final OIDCRequestWrapper wrapper = new OIDCRequestWrapper(verifier, request);
+            chain.doFilter(wrapper, res);
         } else {
             chain.doFilter(req, res);
         }
