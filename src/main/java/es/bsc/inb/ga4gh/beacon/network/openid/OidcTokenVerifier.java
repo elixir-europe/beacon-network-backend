@@ -86,11 +86,15 @@ public class OidcTokenVerifier {
         this.provider = provider;
         this.uri = uri;
         
-        try (JsonReader reader = Json.createReader(
-                new StringReader(ConfigurationProperties.BN_TOKEN_AUDIENCE))) {
-            final JsonValue aud = reader.readValue();
-            audiences = parseJsonValue(aud);
-        } catch (Exception ex) {
+        if (ConfigurationProperties.BN_TOKEN_AUDIENCE != null) {
+            try (JsonReader reader = Json.createReader(
+                    new StringReader(ConfigurationProperties.BN_TOKEN_AUDIENCE))) {
+                final JsonValue aud = reader.readValue();
+                audiences = parseJsonValue(aud);
+            } catch (Exception ex) {
+                audiences = Collections.EMPTY_LIST;
+            }
+        } else {
             audiences = Collections.EMPTY_LIST;
         }
     }

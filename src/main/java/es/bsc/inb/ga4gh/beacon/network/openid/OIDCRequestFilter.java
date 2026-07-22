@@ -57,8 +57,7 @@ public class OIDCRequestFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) 
             throws IOException, ServletException {
         
-        if (ConfigurationProperties.BN_TOKEN_ISSUER != null && 
-            ConfigurationProperties.BN_TOKEN_AUDIENCE != null &&
+        if (ConfigurationProperties.BN_TOKEN_ISSUER != null &&
             req instanceof HttpServletRequest request &&
             request.getHeader(HttpHeaders.AUTHORIZATION) != null) {
             if (verifier == null) {
