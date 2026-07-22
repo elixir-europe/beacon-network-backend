@@ -166,6 +166,17 @@ curl -H "Content-Type: application/x-www-form-urlencoded"
 and checking the scopes provided in this token. This means that the client should allow `client_credentials` grant types 
 (in addition to the `urn:ietf:params:oauth:grant-type:token-exchange`).
 
+Beacon Network may also act as a 'nested' Beacon in the other Beacon Network. It may require to validate OIDC Access Token(s).
+
+```
+BEACON_NETWORK_TOKEN_ISSUER=https://login.aai.lifescience-ri.eu/oidc
+BEACON_NETWORK_TOKEN_AUDIENCE='["client1", "client2"]'
+BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK=true
+```
+Having `BEACON_NETWORK_TOKEN_ISSUER` property set up enables tokens validation.  
+If `BEACON_NETWORK_TOKEN_AUDIENCE` property is defined, Beacon Network validates whether some of the valid 'clients' are in the token's audience field.  
+Setting `BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK` to the 'true' additionally checks whether the Beaon Network's API URL is in the token's audience.
+
 ### SQL Database
 
 The Beacon Network Aggregator uses [Jakarta Persistence 3.1](https://jakarta.ee/specifications/persistence/3.1/) for logging.
