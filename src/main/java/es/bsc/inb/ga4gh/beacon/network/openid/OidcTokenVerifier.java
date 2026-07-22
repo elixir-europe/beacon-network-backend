@@ -76,6 +76,12 @@ public class OidcTokenVerifier {
     
     private List<String> audiences;
     
+    /**
+     * OidcTokenVerifier public constructor.
+     * 
+     * @param provider - the identity provider object to verify tokens with
+     * @param uri - the sting that must be found in the token's 'aud' or null.
+     */
     public OidcTokenVerifier(OidcProvider provider, String uri) {
         this.provider = provider;
         this.uri = uri;
@@ -117,9 +123,10 @@ public class OidcTokenVerifier {
 
                 final JsonValue aud = payload.get(OpenIdConstant.AUDIENCE);
 
-                // if token's "aud" contains no BN API URL or contains no 'allowed' audiences
+                // check "aud" contains 'allowed' audiences and api uri (if defined)
                 final List<String> l = parseJsonValue(aud);
-                if (!l.contains(uri) || l.stream().noneMatch(audiences::contains)) {
+                if ((uri != null && !l.contains(uri)) || 
+                    (!audiences.isEmpty() && l.stream().noneMatch(audiences::contains))) {
                     return null;
                 }
                         

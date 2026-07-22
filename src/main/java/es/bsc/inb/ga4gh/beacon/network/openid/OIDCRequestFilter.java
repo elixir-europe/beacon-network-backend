@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (C) 2023 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
+ * Copyright (C) 2026 ELIXIR ES, Spanish National Bioinformatics Institute (INB)
  * and Barcelona Supercomputing Center (BSC)
  *
  * Modifications to the initial code base are copyright of their respective
@@ -26,6 +26,7 @@
 package es.bsc.inb.ga4gh.beacon.network.openid;
 
 import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
+import static es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties.BN_TOKEN_AUDIENCE_API_URI_CHECK;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -64,9 +65,8 @@ public class OIDCRequestFilter implements Filter {
                 final OidcProvider provider = new OidcProvider(ConfigurationProperties.BN_TOKEN_ISSUER);
                 
                 // this beacon network API uri
-                final String uri = UriBuilder.fromUri(URI.create(request.getRequestURL().toString()))
-                        .replacePath(request.getContextPath())
-                        .path(request.getServletPath()).build().toString();
+                final String uri = BN_TOKEN_AUDIENCE_API_URI_CHECK ? UriBuilder.fromUri(URI.create(request.getRequestURL().toString()))
+                        .replacePath(request.getContextPath()).path(request.getServletPath()).build().toString() : null;
 
                 verifier = new OidcTokenVerifier(provider, uri);
             }
