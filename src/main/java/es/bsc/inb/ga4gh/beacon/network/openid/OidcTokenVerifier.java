@@ -86,7 +86,12 @@ public class OidcTokenVerifier {
         this.provider = provider;
         this.uri = uri;
         
-        if (ConfigurationProperties.BN_TOKEN_AUDIENCE != null) {
+        if (ConfigurationProperties.BN_TOKEN_AUDIENCE == null) {
+            audiences = Collections.EMPTY_LIST;
+        } else if ((ConfigurationProperties.BN_TOKEN_AUDIENCE.startsWith("\"") &&
+                    ConfigurationProperties.BN_TOKEN_AUDIENCE.endsWith("\"")) ||
+                   ((ConfigurationProperties.BN_TOKEN_AUDIENCE.startsWith("[") &&
+                    ConfigurationProperties.BN_TOKEN_AUDIENCE.endsWith("]")))) {
             try (JsonReader reader = Json.createReader(
                     new StringReader(ConfigurationProperties.BN_TOKEN_AUDIENCE))) {
                 final JsonValue aud = reader.readValue();
@@ -95,7 +100,7 @@ public class OidcTokenVerifier {
                 audiences = Collections.EMPTY_LIST;
             }
         } else {
-            audiences = Collections.EMPTY_LIST;
+            audiences = List.of(ConfigurationProperties.BN_TOKEN_AUDIENCE);
         }
     }
 
