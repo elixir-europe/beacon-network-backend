@@ -97,6 +97,9 @@ public class OidcTokenVerifier {
                 final JsonValue aud = reader.readValue();
                 audiences = parseJsonValue(aud);
             } catch (Exception ex) {
+                Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                        Level.INFO, "error {0} variable parsing", ConfigurationProperties.BN_TOKEN_AUDIENCE_PROPERTY_NAME);
+
                 audiences = Collections.EMPTY_LIST;
             }
         } else {
@@ -121,12 +124,18 @@ public class OidcTokenVerifier {
                 // RFC 9068 'iss' REQUIRED
                 final String issuer = payload.getString(OpenIdConstant.ISSUER_IDENTIFIER, null);
                 if (!Objects.equals(issuer, provider.getIssuer())) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "invalid token issuer {0}", issuer);
+
                     return null;
                 }
 
                 // RFC 9068 'exp' REQUIRED
                 final JsonNumber exp = payload.getJsonNumber(OpenIdConstant.EXPIRATION_IDENTIFIER);
                 if (exp == null || Instant.now().getEpochSecond() > exp.longValue()) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "token expired {0}", exp);
+
                     return null; // token expired
                 }
 
@@ -136,21 +145,33 @@ public class OidcTokenVerifier {
                 final List<String> l = parseJsonValue(aud);
                 if ((uri != null && !l.contains(uri)) || 
                     (!audiences.isEmpty() && l.stream().noneMatch(audiences::contains))) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "no matching audiences found {0}", String.join(" ", l));
+
                     return null;
                 }
                         
                 final String kid = header.getString("kid", null);
                 if (kid == null) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "invalid token header. no 'kid' found");
+                    
                     return null;
                 }
 
                 final String alg = JwtSigningAlgorithms.map.get(header.getString("alg", "none"));
                 if (alg == null) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "invalid token header. no 'alg' found");
+
                     return null;
                 }
                 
                 final JsonObject jwk = provider.getKey(kid);
                 if (jwk == null) {
+                    Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                            Level.INFO, "no key '{0}' found on the identity provider server", kid);
+
                     return null;
                 }
                 
@@ -212,6 +233,8 @@ public class OidcTokenVerifier {
             return verifier.verify(signature);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | 
                  InvalidKeyException | SignatureException ex) {
+                Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                        Level.INFO, "error RSA key validation: {0}", ex.getMessage());
         }
         
         return false;
@@ -255,8 +278,8 @@ public class OidcTokenVerifier {
             return verifier.verify(signature);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | 
                  InvalidKeyException | SignatureException | InvalidParameterSpecException ex) {
-            Logger.getLogger(OidcTokenVerifier.class.getName()).log(
-                    Level.SEVERE, ex.getMessage());
+                Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                        Level.INFO, "error EC key validation: {0}", ex.getMessage());
         }
         
         return false;
@@ -287,6 +310,8 @@ public class OidcTokenVerifier {
             return verifier.verify(signature);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | 
                  InvalidKeyException | SignatureException ex) {
+                Logger.getLogger(OidcTokenVerifier.class.getName()).log(
+                        Level.INFO, "error EdDSA key validation: {0}", ex.getMessage());
         }
         
         return false;
@@ -310,10 +335,10 @@ public class OidcTokenVerifier {
             try (JsonReader reader = Json.createReader(new ByteArrayInputStream(json))) {
                 return reader.readObject();
             } catch (Exception ex) {
-                Logger.getLogger(OidcTokenVerifier.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                Logger.getLogger(OidcTokenVerifier.class.getName()).log(Level.INFO, ex.getMessage(), ex);
             }
         } catch(IllegalArgumentException ex) {
-            Logger.getLogger(OidcTokenVerifier.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            Logger.getLogger(OidcTokenVerifier.class.getName()).log(Level.INFO, ex.getMessage(), ex);
         }
         return null;
     }

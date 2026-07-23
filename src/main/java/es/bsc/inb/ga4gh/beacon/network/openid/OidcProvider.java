@@ -25,6 +25,9 @@
 
 package es.bsc.inb.ga4gh.beacon.network.openid;
 
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconFileLogger;
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity;
+import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogLevel;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
@@ -50,6 +53,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,7 +112,10 @@ public class OidcProvider {
                     .header(HttpHeaders.USER_AGENT, "BN/2.0.0")
                     .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON).GET().build();
 
-            configuration = invoke(request);
+            final UUID xid = BeaconFileLogger.filelog != null && 
+                       BeaconLogLevel.LEVEL.compareTo(BeaconLogLevel.AUTH) >= 0 ? UUID.randomUUID() : null;
+
+            configuration = invoke(request, xid);
         }
         return configuration;
     }
@@ -153,7 +160,10 @@ public class OidcProvider {
                 final HttpRequest request = HttpRequest.newBuilder(URI.create(jwks_uri))
                         .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON).GET().build();
 
-                final JsonObject response = invoke(request);
+                final UUID xid = BeaconFileLogger.filelog != null && 
+                           BeaconLogLevel.LEVEL.compareTo(BeaconLogLevel.AUTH) >= 0 ? UUID.randomUUID() : null;
+
+                final JsonObject response = invoke(request, xid);
                 if (response != null) {
                     return response.getJsonArray("keys");
                 }
@@ -184,6 +194,10 @@ public class OidcProvider {
 
         final JsonObject payload = parse(token);
         if (payload == null) {
+            Logger.getLogger(OidcProvider.class.getName()).log(
+                    Level.WARNING, "error parsing subject token ...{0}",
+                    token.substring(Math.max(token.length()-7, 0)));
+
             return null;
         }
         
@@ -270,7 +284,10 @@ public class OidcProvider {
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(data, StandardCharsets.UTF_8));
         
-        final JsonObject token_response = invoke(builder.build());
+        final UUID xid = BeaconFileLogger.filelog != null && 
+                   BeaconLogLevel.LEVEL.compareTo(BeaconLogLevel.AUTH) >= 0 ? UUID.randomUUID() : null;
+
+        final JsonObject token_response = invoke(builder.build(), xid);
         if (token_response != null) {
             final String access_token = token_response.getString(OpenIdConstant.ACCESS_TOKEN, null);
             if (access_token != null) {
@@ -283,26 +300,66 @@ public class OidcProvider {
         return null;        
     }
 
-    private JsonObject invoke(HttpRequest request) {
-        try {
+    /**
+     * Basic HTTP request method.
+     * 
+     * @param request - HTTP request
+     * @param uuid - log transaction identifier or null if no logging
+     * 
+     * @return HTTP response object or null
+     */
+    private JsonObject invoke(HttpRequest request, UUID xid) {
+        
+        // create the log_entry if xid is provided
+        final BeaconLogEntity log_entry = xid != null ?
+                new BeaconLogEntity(xid,BeaconLogEntity.REQUEST_TYPE.OIDC,
+                    BeaconLogEntity.METHOD.valueOf(request.method()), request.uri().toString(),
+                    null, null, null, null) : null;
+
+        try {            
             final HttpResponse<String> response = http_client.send(request, 
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            if (response != null && response.statusCode() < 300) {
+            
+            if (response == null) {
+                Logger.getLogger(OidcProvider.class.getName()).log(
+                        Level.INFO, "no response from {0}", request.uri());
+                
+                if (log_entry != null) {
+                    log_entry.setMessage("no response");
+                    BeaconFileLogger.filelog.info(log_entry.toString());
+                }
+            } else if (response.statusCode() < 300) {
                 final String body = response.body();
                 if (body == null) {
                     Logger.getLogger(OidcProvider.class.getName()).log(
-                                Level.WARNING, "empty response {0}", request.uri());
+                                Level.INFO, "empty response {0}", request.uri());
+                    if (log_entry != null) {
+                        log_entry.setCode(response.statusCode());
+                        log_entry.setMessage("empty response");
+                        BeaconFileLogger.filelog.info(log_entry.toString());
+                    }
                     return null;
                 }
                 try (JsonReader reader = Json.createReader(new StringReader(body))) {
                     return reader.readObject();
-                } 
+                }
+            } else {
+                Logger.getLogger(OidcProvider.class.getName()).log(
+                        Level.INFO, "invalid response from {0}", request.uri());
+
+                if (log_entry != null) {
+                    log_entry.setMessage("invalid response");
+                    log_entry.setCode(response.statusCode());
+                    BeaconFileLogger.filelog.info(log_entry.toString());
+                }
             }
-            Logger.getLogger(OidcProvider.class.getName()).log(
-                    Level.SEVERE, "invalid or no response from {0}", request.uri());
         } catch(IOException | InterruptedException ex) {
             Logger.getLogger(OidcProvider.class.getName()).log(
-                    Level.SEVERE, "error invoking {0}", ex.getMessage());
+                    Level.INFO, "error invoking {0}", ex.getMessage());
+            if (log_entry != null) {
+                log_entry.setMessage(ex.getMessage());
+                BeaconFileLogger.filelog.info(log_entry.toString());
+            }
         }
         
         return null;
@@ -322,6 +379,8 @@ public class OidcProvider {
             final byte[] b = decoder.decode(base64);
             return Json.createReader(new ByteArrayInputStream(b)).readObject();
         } catch (Exception ex) {
+            Logger.getLogger(OidcProvider.class.getName()).log(
+                    Level.INFO, "error decoding token body part {0}", ex.getMessage());
             return null;
         }
     }

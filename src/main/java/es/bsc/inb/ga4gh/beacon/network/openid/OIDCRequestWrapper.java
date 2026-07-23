@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Dmitry Repchevsky
@@ -81,6 +83,9 @@ public class OIDCRequestWrapper extends HttpServletRequestWrapper {
                         final String token = header.substring(7);
                         if (verifier.verify(token) == null) {
                             iter.remove();
+                            Logger.getLogger(OIDCRequestWrapper.class.getName()).log(
+                                    Level.INFO, "removing invalid token ...{0}", 
+                                    token.substring(Math.max(token.length()-7, 0)));
                         }
                     }
                 }

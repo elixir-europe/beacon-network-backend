@@ -193,7 +193,7 @@ public class BeaconLogEntity implements Serializable {
     }
     
     public static enum REQUEST_TYPE {
-        METADATA, QUERY, REQUEST;
+        METADATA, OIDC, QUERY, REQUEST;
     }
     
     @Override
