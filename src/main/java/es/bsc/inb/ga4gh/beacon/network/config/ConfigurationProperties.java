@@ -37,6 +37,10 @@ public final class ConfigurationProperties {
     public final static String BN_CLIENT_ID_PROPERTY_NAME = "BEACON_NETWORK_CLIENT_ID";
     public final static String BN_CLIENT_SECRET_PROPERTY_NAME = "BEACON_NETWORK_CLIENT_SECRET";
     
+    public final static String BN_TOKEN_ISSUER_PROPERTY_NAME = "BEACON_NETWORK_TOKEN_ISSUER";
+    public final static String BN_TOKEN_AUDIENCE_PROPERTY_NAME = "BEACON_NETWORK_TOKEN_AUDIENCE";
+    public final static String BN_TOKEN_AUDIENCE_API_URI_CHECK_PROPERTY_NAME = "BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK";
+    
     public final static String BN_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REQUEST_TIMEOUT";
     public final static String BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT";
     public final static String BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REFRESH_METADATA_TIMEOUT";
@@ -60,10 +64,18 @@ public final class ConfigurationProperties {
     public final static String BN_CLIENT_ID;
     public final static String BN_CLIENT_SECRET;
     
+    public final static String BN_TOKEN_ISSUER;
+    public final static String BN_TOKEN_AUDIENCE;
+    public final static boolean BN_TOKEN_AUDIENCE_API_URI_CHECK;
+
     static {
         BN_OIDC_ENDPOINT = System.getenv(BN_OIDC_ENDPOINT_PROPERTY_NAME);
         BN_CLIENT_ID = System.getenv(BN_CLIENT_ID_PROPERTY_NAME);
         BN_CLIENT_SECRET = System.getenv(BN_CLIENT_SECRET_PROPERTY_NAME);
+
+        BN_TOKEN_ISSUER = System.getenv(BN_TOKEN_ISSUER_PROPERTY_NAME);
+        BN_TOKEN_AUDIENCE = System.getenv(BN_TOKEN_AUDIENCE_PROPERTY_NAME);
+        BN_TOKEN_AUDIENCE_API_URI_CHECK = Boolean.parseBoolean(System.getenv(BN_TOKEN_AUDIENCE_API_URI_CHECK_PROPERTY_NAME));
         
         BN_CONFIG_DIR_PROPERTY = System.getenv(BN_CONFIG_DIR_PROPERTY_NAME);
         BN_LOG_FILE_PROPERTY = System.getenv(BN_LOG_FILE_PROPERTY_NAME);

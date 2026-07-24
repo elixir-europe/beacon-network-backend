@@ -33,13 +33,8 @@ import jakarta.inject.Singleton;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Dmitry Repchevsky
@@ -50,29 +45,7 @@ public class BeaconLog {
 
     @Inject
     private EntityManager em;
-    
-    private Logger filelog;
-    
-    @PostConstruct
-    public void init() {
-        if (ConfigurationProperties.BN_LOG_FILE_PROPERTY != null &&
-            ConfigurationProperties.BN_LOG_FILE_PROPERTY.trim().length() > 0) {
-            try {
-                filelog = Logger.getLogger(ConfigurationProperties.BN_LOG_FILE_PROPERTY_NAME);
-                
-                final Handler fh = new FileHandler(
-                        ConfigurationProperties.BN_LOG_FILE_PROPERTY.trim(), true);
-                
-                fh.setFormatter(new FileLogFormatter());
-                
-                filelog.addHandler(fh);
-                filelog.setUseParentHandlers(false);
-            } catch(IOException ex) {
-                Logger.getLogger(BeaconLog.class.getName()).log(Level.WARNING, null, ex);
-            }
-        }
-    }
-    
+        
     public BeaconLogEntity getLastResponse(String url) {
         final EntityTransaction tx = em.getTransaction();
         try {
@@ -132,7 +105,7 @@ public class BeaconLog {
      * @return list of log records.
      */
     private List<BeaconLogEntity> getLastRecords(int n) {
-        if (filelog != null) {
+        if (BeaconFileLogger.filelog != null) {
             
         }
         
@@ -157,8 +130,8 @@ public class BeaconLog {
             record.setResponse(null);
         }
         
-        if (filelog != null) {
-            filelog.info(record.toString());
+        if (BeaconFileLogger.filelog != null) {
+            BeaconFileLogger.filelog.info(record.toString());
         }
 
         final EntityTransaction tx = em.getTransaction();

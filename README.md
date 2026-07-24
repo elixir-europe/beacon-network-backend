@@ -28,7 +28,7 @@ git clone https://github.com/elixir-europe/beacon-network-backend.git
 cd beacon-network-backend
 mvn install
 ```
-This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.14/beacon-network-v2-0.0.14.war).
+This must create `beacon-network-v2-x.x.x.war` (**W**eb application **AR**chive) application in the `/target` directory. Alternatively, you can find this file in the Barcelona Supercomputing Center's [maven repository](https://inb.bsc.es/maven/es/bsc/inb/ga4gh/beacon-network-v2/0.0.15/beacon-network-v2-0.0.15.war).
 
 #### WilfFly server
 WildFly is a free opensource JEE server and may be easy downloaded from it's website: http://wildfly.org/.  
@@ -173,8 +173,9 @@ BEACON_NETWORK_TOKEN_ISSUER=https://login.aai.lifescience-ri.eu/oidc
 BEACON_NETWORK_TOKEN_AUDIENCE='["client1", "client2"]'
 BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK=true
 ```
-Having `BEACON_NETWORK_TOKEN_ISSUER` property set up enables tokens validation.  
-If `BEACON_NETWORK_TOKEN_AUDIENCE` property is defined, Beacon Network validates whether some of the valid 'clients' are in the token's audience field.  
+Having `BEACON_NETWORK_TOKEN_ISSUER` property set up enables tokens validation...
+If `BEACON_NETWORK_TOKEN_AUDIENCE` property is defined, Beacon Network validates whether some of the valid 'clients' are in the token's audience field.....
+The `BEACON_NETWORK_TOKEN_AUDIENCE` value may be either JSON String (BEACON_NETWORK_TOKEN_AUDIENCE='"client"'), JSON Array or a plain value (BEACON_NETWORK_TOKEN_AUDIENCE=client)...
 Setting `BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK` to the 'true' additionally checks whether the Beaon Network's API URL is in the token's audience.
 
 ### SQL Database
@@ -187,6 +188,7 @@ The application provides simple SQL logging which level may be confirured via `B
 The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES**", "**ALL**"
 - "**NONE**" : No logging at all.
 - "**METADATA**" : Only backed beacons' metadata is logged (good for debugging).
+- "**AUTH**" : OIDC Authentication calls are logged (OIDC Identity Provider's calls).
 - "**QUERIES**" : Beacon Network request quieries are logged.
 - "**REQUESTS**" : Beacon Request quieries are logged. It also logs response codes (but not the data).
 - "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
