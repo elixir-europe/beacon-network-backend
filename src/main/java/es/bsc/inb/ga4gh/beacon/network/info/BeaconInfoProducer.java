@@ -40,6 +40,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -60,10 +61,14 @@ public class BeaconInfoProducer implements Serializable {
     private NetworkConfiguration config;
 
     private BeaconNetworkInfoResponse beacon_info;
+    private JsonObject configured_info;
     
     @PostConstruct
     public void init() {
         beacon_info = cfg.loadConfiguration(BEACON_NETWORK_INFO_FILE, BeaconNetworkInfoResponse.class);
+        if (beacon_info != null && beacon_info.getResponse() != null) {
+            configured_info = beacon_info.getResponse().getInfo();
+        }
 
     }
 
@@ -102,8 +107,11 @@ public class BeaconInfoProducer implements Serializable {
             
         final Map<String, List<BeaconValidationMessage>> errors = config.getErrors();
         if (errors.isEmpty()) {
-            results.setInfo(null);
+            results.setInfo(configured_info);
         } else {
+            final JsonObjectBuilder info = configured_info == null
+                    ? Json.createObjectBuilder()
+                    : Json.createObjectBuilder(configured_info);
             final JsonArrayBuilder endpoints = Json.createArrayBuilder();
             for (Map.Entry<String, List<BeaconValidationMessage>> entry : errors.entrySet()) {
                 final JsonObjectBuilder endpoint = Json.createObjectBuilder();
@@ -132,7 +140,7 @@ public class BeaconInfoProducer implements Serializable {
                 endpoint.add("errors", arr);
                 endpoints.add(endpoint);
             }
-            results.setInfo(Json.createObjectBuilder().add("metadata_errors", endpoints).build());
+            results.setInfo(info.add("metadata_errors", endpoints).build());
         }
     }
 
