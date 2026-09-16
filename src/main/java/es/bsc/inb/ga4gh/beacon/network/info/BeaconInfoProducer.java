@@ -61,13 +61,13 @@ public class BeaconInfoProducer implements Serializable {
     private NetworkConfiguration config;
 
     private BeaconNetworkInfoResponse beacon_info;
-    private JsonObject configured_info;
+    private JsonObject configured_response_info;
     
     @PostConstruct
     public void init() {
         beacon_info = cfg.loadConfiguration(BEACON_NETWORK_INFO_FILE, BeaconNetworkInfoResponse.class);
         if (beacon_info != null && beacon_info.getResponse() != null) {
-            configured_info = beacon_info.getResponse().getInfo();
+            configured_response_info = beacon_info.getResponse().getInfo();
         }
 
     }
@@ -107,11 +107,11 @@ public class BeaconInfoProducer implements Serializable {
             
         final Map<String, List<BeaconValidationMessage>> errors = config.getErrors();
         if (errors.isEmpty()) {
-            results.setInfo(configured_info);
+            results.setInfo(configured_response_info);
         } else {
-            final JsonObjectBuilder info = configured_info == null
+            final JsonObjectBuilder info = configured_response_info == null
                     ? Json.createObjectBuilder()
-                    : Json.createObjectBuilder(configured_info);
+                    : Json.createObjectBuilder(configured_response_info);
             final JsonArrayBuilder endpoints = Json.createArrayBuilder();
             for (Map.Entry<String, List<BeaconValidationMessage>> entry : errors.entrySet()) {
                 final JsonObjectBuilder endpoint = Json.createObjectBuilder();
