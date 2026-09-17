@@ -75,6 +75,7 @@ There are several timeouts that may be configured via environment variables:
 - `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
 - `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` - timeout in seconds (default 5 sec.) after which the response from a Beacon is discarded.
 - `BEACON_NETWORK_REQUEST_TIMEOUT` - timeout in seconds (default 600 sec.) after which the request to the Beacon is cancelled.
+- `BEACON_NETWORK_HTTPCLIENT_H2_IDLE_TIMEOUT_SECONDS` - maximum idle lifetime in seconds for outbound HTTP/2 connections in the supplied Docker image (default 300 sec.). Set this below the idle-flow timeout of any stateful network device on the deployment path.
 
 Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
 If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
@@ -193,4 +194,3 @@ The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES
 - "**REQUESTS**" : Beacon Request quieries are logged. It also logs response codes (but not the data).
 - "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
 - "**ALL**" : Maximum logging level. Currently same as "**RESPONSES**"
-

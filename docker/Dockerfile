@@ -9,7 +9,14 @@ COPY src/ /src/
 RUN mvn clean install -DskipTests --no-transfer-progress
 
 # Beacon Network 2.0 image
-FROM quay.io/wildfly/wildfly:39.0.0.Final-jdk17
+FROM quay.io/wildfly/wildfly:39.0.0.Final-jdk21
+
+# Close idle HTTP/2 connections before common stateful-network idle timeouts.
+# Deployments can override this value at runtime.
+ENV BEACON_NETWORK_HTTPCLIENT_H2_IDLE_TIMEOUT_SECONDS=300
+
+RUN printf '\nJAVA_OPTS="$JAVA_OPTS -Djdk.httpclient.keepalive.timeout.h2=${BEACON_NETWORK_HTTPCLIENT_H2_IDLE_TIMEOUT_SECONDS}"\n' \
+    >> "$JBOSS_HOME/bin/standalone.conf"
 
 # add PostgreSQL java driver
 COPY ./docker/wildfly/modules/postgresql $JBOSS_HOME/modules/system/layers/base/org/postgresql/
