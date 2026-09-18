@@ -79,6 +79,8 @@ There are several timeouts that may be configured via environment variables:
 Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
 If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
 
+The supplied Docker image also exposes `JDK_HTTPCLIENT_KEEPALIVE_TIMEOUT_H2`, which sets the maximum idle lifetime of outbound HTTP/2 connections in seconds (default 300). This is a JVM runtime setting for the JDK HTTP client; deployments using the supplied image may override it with a value below the idle-flow timeout of any stateful network device on the deployment path (e.g. AWS NAT Gateway timeout of 350s).
+
 #### Beacon Network Endpoints pre-configuration
 
 By default, Beacon Network defines the endpoints basing on the endpoints found in the backed beacons (specified in the `/map` endpoint).
@@ -193,4 +195,3 @@ The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES
 - "**REQUESTS**" : Beacon Request quieries are logged. It also logs response codes (but not the data).
 - "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
 - "**ALL**" : Maximum logging level. Currently same as "**RESPONSES**"
-
