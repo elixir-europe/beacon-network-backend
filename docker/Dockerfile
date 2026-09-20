@@ -1,4 +1,4 @@
-FROM maven:3.9.11-eclipse-temurin-17 as builder
+FROM maven:3.9.11-eclipse-temurin-21 as builder
 
 COPY pom.xml .
 
