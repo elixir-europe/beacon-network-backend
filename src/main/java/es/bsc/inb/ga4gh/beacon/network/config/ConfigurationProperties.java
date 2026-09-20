@@ -44,7 +44,10 @@ public final class ConfigurationProperties {
     public final static String BN_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REQUEST_TIMEOUT";
     public final static String BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT";
     public final static String BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME = "BEACON_NETWORK_REFRESH_METADATA_TIMEOUT";
+    
     public final static String BN_LOG_FILE_PROPERTY_NAME = "BEACON_NETWORK_LOG_FILE";
+    public final static String BN_LOG_FILE_MIN_ROWS_PROPERTY_NAME = "BN_LOG_FILE_MIN_ROWS";
+    public final static String BN_LOG_FILE_MAX_ROWS_PROPERTY_NAME = "BN_LOG_FILE_MAX_ROWS";
     
     public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
     public final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
@@ -53,6 +56,8 @@ public final class ConfigurationProperties {
     public final static String BEACON_NETWORK_CONFIGURATION_FILE = "beacon-network-configuration.json";
     
     public final static String BN_LOG_FILE_PROPERTY;
+    public final static long BN_LOG_FILE_MIN_ROWS;
+    public final static long BN_LOG_FILE_MAX_ROWS;
         
     public final static String BN_CONFIG_DIR_PROPERTY;
     
@@ -78,7 +83,11 @@ public final class ConfigurationProperties {
         BN_TOKEN_AUDIENCE_API_URI_CHECK = Boolean.parseBoolean(System.getenv(BN_TOKEN_AUDIENCE_API_URI_CHECK_PROPERTY_NAME));
         
         BN_CONFIG_DIR_PROPERTY = System.getenv(BN_CONFIG_DIR_PROPERTY_NAME);
+        
         BN_LOG_FILE_PROPERTY = System.getenv(BN_LOG_FILE_PROPERTY_NAME);
+        BN_LOG_FILE_MIN_ROWS = readProperty(BN_LOG_FILE_MIN_ROWS_PROPERTY_NAME, 1000);
+        BN_LOG_FILE_MAX_ROWS = readProperty(BN_LOG_FILE_MAX_ROWS_PROPERTY_NAME, 10000);
+        
         BN_DISCARD_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME, 5);
         BN_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_REQUEST_TIMEOUT_PROPERTY_NAME, 600);
         BN_REFRESH_METADATA_TIMEOUT_PROPERTY = readProperty(BN_REFRESH_METADATA_TIMEOUT_PROPERTY_NAME, 60);

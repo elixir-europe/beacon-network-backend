@@ -25,9 +25,7 @@
 
 package es.bsc.inb.ga4gh.beacon.network.log;
 
-import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
 import es.bsc.inb.ga4gh.beacon.network.log.BeaconLogEntity.REQUEST_TYPE;
-import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.persistence.EntityManager;
@@ -68,7 +66,7 @@ public class BeaconLog {
         return null;
     }
     
-/**
+    /**
      * Get last 'REQUEST' records from the log.
      * 
      * @param n the number of records to read
