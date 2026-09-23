@@ -48,7 +48,6 @@ public final class ConfigurationProperties {
     public final static String BN_LOG_FILE_PROPERTY_NAME = "BEACON_NETWORK_LOG_FILE";
     public final static String BN_LOG_FILE_MIN_ROWS_PROPERTY_NAME = "BN_LOG_FILE_MIN_ROWS";
     public final static String BN_LOG_FILE_MAX_ROWS_PROPERTY_NAME = "BN_LOG_FILE_MAX_ROWS";
-    public final static String BN_MAX_LOG_FILES_PROPERTY_NAME = "BN_MAX_LOG_FILES";
     
     public final static String BEACON_NETWORK_CONFIG_DIR = "BEACON-INF/";
     public final static String BEACON_NETWORK_CONFIG_FILE = "beacon-network.json";
@@ -59,7 +58,6 @@ public final class ConfigurationProperties {
     public final static String BN_LOG_FILE_PROPERTY;
     public final static long BN_LOG_FILE_MIN_ROWS;
     public final static long BN_LOG_FILE_MAX_ROWS;
-    public final static long BN_MAX_LOG_FILES;
         
     public final static String BN_CONFIG_DIR_PROPERTY;
     
@@ -87,9 +85,8 @@ public final class ConfigurationProperties {
         BN_CONFIG_DIR_PROPERTY = System.getenv(BN_CONFIG_DIR_PROPERTY_NAME);
         
         BN_LOG_FILE_PROPERTY = System.getenv(BN_LOG_FILE_PROPERTY_NAME);
-        BN_LOG_FILE_MIN_ROWS = readProperty(BN_LOG_FILE_MIN_ROWS_PROPERTY_NAME, 10000);
-        BN_LOG_FILE_MAX_ROWS = readProperty(BN_LOG_FILE_MAX_ROWS_PROPERTY_NAME, 100000);
-        BN_MAX_LOG_FILES = readProperty(BN_MAX_LOG_FILES_PROPERTY_NAME, 0);
+        BN_LOG_FILE_MIN_ROWS = readProperty(BN_LOG_FILE_MIN_ROWS_PROPERTY_NAME, 1000);
+        BN_LOG_FILE_MAX_ROWS = readProperty(BN_LOG_FILE_MAX_ROWS_PROPERTY_NAME, 10000);
         
         BN_DISCARD_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_DISCARD_REQUEST_TIMEOUT_PROPERTY_NAME, 5);
         BN_REQUEST_TIMEOUT_PROPERTY = readProperty(BN_REQUEST_TIMEOUT_PROPERTY_NAME, 600);

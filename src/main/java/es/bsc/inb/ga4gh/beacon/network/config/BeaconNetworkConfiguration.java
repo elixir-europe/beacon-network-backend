@@ -59,7 +59,7 @@ public class BeaconNetworkConfiguration {
                         bean = JsonbBuilder.create().fromJson(in, clazz);
                     } catch (NoSuchFileException ex) {
                     } catch (Exception ex) {
-                        Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.WARNING, null, ex);
+                                Logger.getLogger(BeaconNetworkConfiguration.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
             }

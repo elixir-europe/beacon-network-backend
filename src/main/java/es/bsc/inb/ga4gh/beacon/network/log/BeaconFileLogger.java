@@ -49,8 +49,7 @@ public final class BeaconFileLogger {
                 final Handler fh = new BeaconLogSplitFilesHandler(
                         Paths.get(ConfigurationProperties.BN_LOG_FILE_PROPERTY.trim()),
                         ConfigurationProperties.BN_LOG_FILE_MAX_ROWS,
-                        ConfigurationProperties.BN_LOG_FILE_MIN_ROWS,
-                        ConfigurationProperties.BN_MAX_LOG_FILES);
+                        ConfigurationProperties.BN_LOG_FILE_MIN_ROWS);
                 
                 fh.setFormatter(new FileLogFormatter());
                 
