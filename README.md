@@ -73,8 +73,9 @@ It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beac
 
 Beacon Network server provides simple splitting file logging:
 - `BEACON_NETWORK_LOG_FILE` - log file name.
-- `BN_LOG_FILE_MIN_ROWS` - minimum records to keep in the active log file after the old records compressed.
-- `BN_LOG_FILE_MAX_ROWS` - the maximum rows for the active log (actually the number of rows to be moved to compressed log file)
+- `BN_LOG_FILE_MIN_ROWS` - minimum records to keep in the active log file after the old records compressed (default 10000).
+- `BN_LOG_FILE_MAX_ROWS` - the number of rows to be moved to compressed log file (default 100000).
+- `BN_MAX_LOG_FILES` - the maximum compressed log files to keep (default 0 - no limit).
 
 #### Beacon Network connection timeouts
 

@@ -35,9 +35,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Comparator;
 import java.util.logging.ErrorManager;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -58,23 +62,54 @@ public class BeaconLogSplitFilesHandler extends Handler {
     private final Path path;
     private final FileChannel ch;
     
-    private final long maxRows;  // maximum rows to keep in the storage log
-    private final long tailRows; // additional rows to keep for backlog
+    private final long maxRows;
+    private final long tailRows;
+    private final long maxFiles;
     
     private long mark; // store position of the end of maxRows in the file
     private long rows; // current rows (records) kept in the log
     
-    
     public BeaconLogSplitFilesHandler(Path path) throws IOException {
-        this(path, 10000, 1000);
+        this(path, 100000, 10000, 0);
     }
 
-    public BeaconLogSplitFilesHandler(Path path, long maxRows, long tailRows) 
-            throws IOException {
+    /**
+     * BeaconLogSplitFilesHandler constructor
+     * 
+     * @param path log file path
+     * @param maxRows number of rows to be moved to the compressed backlog
+     * @param tailRows number of rows to keep in the active log
+     * @param maxFiles limit number of compressed backlog files (0 - no limit)
+     * 
+     * @throws IOException 
+     */
+    public BeaconLogSplitFilesHandler(Path path, long maxRows, long tailRows, 
+            long maxFiles) throws IOException {
+
+        if (tailRows < 0) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, 
+                    String.format("negative 'tailRows' parameter (%d), setting to 10000", tailRows));
+            tailRows = 10000;
+        } else if (tailRows == 0) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, 
+                    String.format("invalid 'tailRows' parameter (%d), setting to 10000", tailRows));
+            tailRows = 10000;
+        }
         
+        if (maxRows < 0) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, 
+                    String.format("negative 'maxRows' parameter (%d), setting to 100000", maxRows));
+            maxRows = 100000;
+        } else if (maxRows == 0) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, 
+                    String.format("invalid 'maxRows' parameter (%d), setting to 100000", maxRows));
+            maxRows = 100000;            
+        }
+                
         this.path = path;
         this.maxRows = maxRows;
         this.tailRows = tailRows;
+        this.maxFiles = maxFiles;
 
         ch = FileChannel.open(path, StandardOpenOption.CREATE, 
                 StandardOpenOption.READ, StandardOpenOption.WRITE);
@@ -136,15 +171,15 @@ public class BeaconLogSplitFilesHandler extends Handler {
     private void compress() {
         final String fname = path.getFileName().toString();
         
-        final String gzname;
-        if (fname.lastIndexOf('.') == fname.length() - 4) {
-            gzname = fname.substring(0, fname.length() - 4) 
-                    + System.currentTimeMillis() + ".log.gz";
-        } else {
-            gzname = fname + System.currentTimeMillis();
+        int dot = fname.lastIndexOf('.');
+        if (dot <= 0 || dot != fname.length() - 4) {
+            dot = fname.length();
         }
         
-        // compress the log [0 .. mark]
+        final String name = fname.substring(0, dot);
+        
+        // compress and save the log [0 .. mark]
+        final String gzname = name + System.currentTimeMillis() + fname.substring(dot) + ".gz";
         final Path gzpath = Paths.get(path.getParent().toString(), gzname);
         try (GZIPOutputStream gzip = new GZIPOutputStream(Files.newOutputStream(
                 gzpath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE));
@@ -152,22 +187,55 @@ public class BeaconLogSplitFilesHandler extends Handler {
             for (long i, count = mark; (i = ch.transferTo(mark - count, count, wbc)) > 0; count -= i) {}
         } catch (IOException ex) {
             reportError("error compressing log file", ex, ErrorManager.WRITE_FAILURE);
+            return;
+        } catch (Exception ex) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, ex.getMessage());
+            return;
         }
         
+        if (maxFiles > 0) {
+            final String regex = "^" + name + "(\\d+)" + fname.substring(dot) + ".gz$";
+            final Path dir = path.getParent();
+            try (Stream<Path> walk = Files.walk(dir, 1)) {
+                walk.filter(Files::isReadable)
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().matches(regex))
+                    .sorted(Comparator.reverseOrder())
+                    .skip(maxFiles)
+                    .forEachOrdered(this::delete);
+            } catch(Exception ex) {
+                Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, ex.getMessage());
+            }
+        }
+
         try {
             // copy [mark .. size] (tailRows) to the file start
             ch.position(0);
             for (long i, pos = mark, len = ch.size() - mark; len > 0; i = ch.transferTo(pos, len, ch), pos += i, len -= i) {}
-            
             ch.truncate(ch.size() - mark);
         } catch (IOException ex) {
             reportError("error truncating log file", ex, ErrorManager.WRITE_FAILURE);
+        } catch (Exception ex) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, ex.getMessage());
         }
         
         mark = 0;
         rows = tailRows;
     }
 
+    /**
+     * Delete a file with no exception
+     * 
+     * @param path file to delete.
+     */
+    private void delete(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException ex) {
+            Logger.getLogger(BeaconLogSplitFilesHandler.class.getName()).log(Level.WARNING, ex.getMessage());
+        }
+    }
+    
     @Override
     public void flush() {
         try {
