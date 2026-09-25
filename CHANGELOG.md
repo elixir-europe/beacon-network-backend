@@ -8,7 +8,6 @@
 ### fixed
 
 - [@delocalizer](https://github.com/elixir-europe/beacon-network-backend/pull/14) fixed an issue with accidental erasing beaconInfoResults info metadata.
-  https://github.com/elixir-europe/beacon-network-backend/issues/
 
 ### improvements
 
