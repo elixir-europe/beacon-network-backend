@@ -27,7 +27,7 @@ package es.bsc.inb.ga4gh.beacon.network.log;
 
 import es.bsc.inb.ga4gh.beacon.network.config.ConfigurationProperties;
 import java.io.IOException;
-import java.util.logging.FileHandler;
+import java.nio.file.Paths;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,15 +46,18 @@ public final class BeaconFileLogger {
             try {
                 log = Logger.getLogger(ConfigurationProperties.BN_LOG_FILE_PROPERTY_NAME);
                 
-                final Handler fh = new FileHandler(
-                        ConfigurationProperties.BN_LOG_FILE_PROPERTY.trim(), true);
+                final Handler fh = new BeaconLogSplitFilesHandler(
+                        Paths.get(ConfigurationProperties.BN_LOG_FILE_PROPERTY.trim()),
+                        ConfigurationProperties.BN_LOG_FILE_MAX_ROWS,
+                        ConfigurationProperties.BN_LOG_FILE_MIN_ROWS,
+                        ConfigurationProperties.BN_MAX_LOG_FILES);
                 
                 fh.setFormatter(new FileLogFormatter());
                 
                 log.addHandler(fh);
                 log.setUseParentHandlers(false);
             } catch(IOException ex) {
-                Logger.getLogger(BeaconLog.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(BeaconFileLogger.class.getName()).log(Level.WARNING, null, ex);
             }
         }
         filelog = log;

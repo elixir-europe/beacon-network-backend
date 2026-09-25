@@ -40,6 +40,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -101,9 +102,18 @@ public class BeaconInfoProducer implements Serializable {
         }
             
         final Map<String, List<BeaconValidationMessage>> errors = config.getErrors();
+        final JsonObject info = results.getInfo();
+
         if (errors.isEmpty()) {
-            results.setInfo(null);
+            if (info != null && info.containsKey("metadata_errors")) {
+                results.setInfo(Json.createObjectBuilder(info)
+                        .remove("metadata_errors")
+                        .build());
+            }
         } else {
+            final JsonObjectBuilder info_builder = info == null
+                    ? Json.createObjectBuilder()
+                    : Json.createObjectBuilder(info);
             final JsonArrayBuilder endpoints = Json.createArrayBuilder();
             for (Map.Entry<String, List<BeaconValidationMessage>> entry : errors.entrySet()) {
                 final JsonObjectBuilder endpoint = Json.createObjectBuilder();
@@ -132,7 +142,7 @@ public class BeaconInfoProducer implements Serializable {
                 endpoint.add("errors", arr);
                 endpoints.add(endpoint);
             }
-            results.setInfo(Json.createObjectBuilder().add("metadata_errors", endpoints).build());
+            results.setInfo(info_builder.add("metadata_errors", endpoints).build());
         }
     }
 

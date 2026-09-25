@@ -69,7 +69,15 @@ export BEACON_NETWORK_CONFIG_DIR=/wildfly/BEACON-INF
 When the `BEACON_NETWORK_CONFIG_DIR` is set, the aggregator monitors the `$BEACON_NETWORK_CONFIG_DIR/beacon-network.json` to dynamically update the configuration.  
 It also looks (but not actively monitoring) the `$BEACON_NETWORK_CONFIG_DIR/beacon-network-configuration.json` and `$BEACON_NETWORK_CONFIG_DIR/beacon-network-info.json` so deployers may change the beacon identifier and other metatada.
 
-It is possible to provide an environment variable `BEACON_NETWORK_LOG_FILE` for the log file.
+#### Beacon Network File Log
+
+Beacon Network server provides simple splitting file logging:
+- `BEACON_NETWORK_LOG_FILE` - log file name.
+- `BN_LOG_FILE_MIN_ROWS` - minimum records to keep in the active log file after the old records compressed (default).
+- `BN_LOG_FILE_MAX_ROWS` - the number of rows to be moved to compressed log file (default 100000).
+- `BN_MAX_LOG_FILES` - limit the number of compressed backlog files (default = 0 - no limit).
+
+#### Beacon Network connection timeouts
 
 There are several timeouts that may be configured via environment variables:
 - `BEACON_NETWORK_REFRESH_METADATA_TIMEOUT` - timeout in minutes (default 60 min.) Beacon Network reloads metadata of the backed Beacons.
@@ -78,6 +86,8 @@ There are several timeouts that may be configured via environment variables:
 
 Note that although responses that take more than `BEACON_NETWORK_DISCARD_REQUEST_TIMEOUT` are discarded (not included in the Beacon Network response), they are not cancelled.
 If a long answering Beacon responds before the `BEACON_NETWORK_REQUEST_TIMEOUT`, the result still may be logged.
+
+The supplied Docker image also exposes `JDK_HTTPCLIENT_KEEPALIVE_TIMEOUT_H2`, which sets the maximum idle lifetime of outbound HTTP/2 connections in seconds (default 300). This is a JVM runtime setting for the JDK HTTP client; deployments using the supplied image may override it with a value below the idle-flow timeout of any stateful network device on the deployment path (e.g. AWS NAT Gateway timeout of 350s).
 
 #### Beacon Network Endpoints pre-configuration
 
@@ -174,8 +184,8 @@ BEACON_NETWORK_TOKEN_AUDIENCE='["client1", "client2"]'
 BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK=true
 ```
 Having `BEACON_NETWORK_TOKEN_ISSUER` property set up enables tokens validation...
-If `BEACON_NETWORK_TOKEN_AUDIENCE` property is defined, Beacon Network validates whether some of the valid 'clients' are in the token's audience field.....
-The `BEACON_NETWORK_TOKEN_AUDIENCE` value may be either JSON String (BEACON_NETWORK_TOKEN_AUDIENCE='"client"'), JSON Array or a plain value (BEACON_NETWORK_TOKEN_AUDIENCE=client)...
+If `BEACON_NETWORK_TOKEN_AUDIENCE` property is defined, Beacon Network validates whether some of the valid 'clients' are in the token's audience field.  
+The `BEACON_NETWORK_TOKEN_AUDIENCE` value may be either JSON String (BEACON_NETWORK_TOKEN_AUDIENCE='"client"'), JSON Array or a plain value (BEACON_NETWORK_TOKEN_AUDIENCE=client).   
 Setting `BEACON_NETWORK_TOKEN_AUDIENCE_API_URI_CHECK` to the 'true' additionally checks whether the Beaon Network's API URL is in the token's audience.
 
 ### SQL Database
@@ -193,4 +203,3 @@ The possible values are "**NONE**", "**METADATA**", "**REQUESTS**", "**RESPONSES
 - "**REQUESTS**" : Beacon Request quieries are logged. It also logs response codes (but not the data).
 - "**RESPONSES**" : Logs all Requests with Responses as well as possible error messages.
 - "**ALL**" : Maximum logging level. Currently same as "**RESPONSES**"
-

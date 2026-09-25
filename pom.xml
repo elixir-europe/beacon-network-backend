@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>es.bsc.inb.ga4gh</groupId>
     <artifactId>beacon-network-v2</artifactId>
-    <version>0.0.15</version>
+    <version>0.0.16</version>
     <packaging>war</packaging>
 
     <description>
@@ -55,8 +55,8 @@
     </developers>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <jakarta.ee.version>10.0.0</jakarta.ee.version>
     </properties>
@@ -94,7 +94,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>3.5.1</version>
             </plugin>
         </plugins>
     </build>
