@@ -18,7 +18,7 @@ ENV JDK_HTTPCLIENT_KEEPALIVE_TIMEOUT_H2=300
 RUN printf '\nJAVA_OPTS="$JAVA_OPTS -Djdk.httpclient.keepalive.timeout.h2=${JDK_HTTPCLIENT_KEEPALIVE_TIMEOUT_H2}"\n' \
     >> "$JBOSS_HOME/bin/standalone.conf"
 
-# add PostgreSQL java driver and latest Yasson snapshot
+# add PostgreSQL java driver
 COPY ./docker/wildfly/modules/postgresql $JBOSS_HOME/modules/system/layers/base/org/postgresql/
 
 RUN /bin/sh -c 'echo -e "embed-server --std-out=echo\n \
